@@ -1,0 +1,230 @@
+version: 1
+approval: KCSA-LESSON-PLAN.md approved; reading-only correction 2026-10-11
+course:
+  id: ATS042
+  certification:
+    name: Kubernetes and Cloud Native Security Associate
+    code: KCSA
+    provider: CNCF / Linux Foundation
+    domain: Kubernetes Cluster Component Security
+    weight: 22
+    competencies:
+    - API Server
+    - Controller Manager
+    - Scheduler
+    - Kubelet
+    - Container Runtime
+    - KubeProxy
+    - Pod
+    - Etcd
+    - Container Networking
+    - Client Security
+    - Storage
+defaults:
+  playground: false
+  module_lab: false
+  capstone: false
+  section_quiz: false
+  final_quiz: true
+sections:
+- id: section-010
+  title: API Server
+  curriculum_item: API Server
+  modules:
+  - id: module-01
+    title: API Server Security Boundaries
+    objectives:
+    - Explain the API server's identity, permission and admission checks.
+    - Relate API transport protection to authenticated peer identity.
+    - Identify risks from excessive API exposure and powerful credentials.
+    - Distinguish API audit evidence from application request logs.
+    outline:
+    - Protecting The Cluster API
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: false
+- id: section-020
+  title: Controller Manager
+  curriculum_item: Controller Manager
+  modules:
+  - id: module-01
+    title: Controller Manager Authority
+    objectives:
+    - Explain controller reconciliation and API permissions.
+    - Identify consequences of a compromised controller identity.
+    - Relate controller availability to workload recovery.
+    - Distinguish Kubernetes controller behavior from application data repair.
+    outline:
+    - Securing Reconciliation Components
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: false
+- id: section-030
+  title: Scheduler
+  curriculum_item: Scheduler
+  modules:
+  - id: module-01
+    title: Scheduler Integrity And Availability
+    objectives:
+    - Explain what the scheduler decides and what it cannot execute.
+    - Relate node labels and placement rules to security assumptions.
+    - Identify the impact of scheduler identity or configuration compromise.
+    - Distinguish placement controls from complete tenant isolation.
+    outline:
+    - Protecting Placement Decisions
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: false
+- id: section-040
+  title: Kubelet
+  curriculum_item: Kubelet
+  modules:
+  - id: module-01
+    title: Kubelet And Node Access
+    objectives:
+    - Explain the kubelet's authority over assigned Pods.
+    - Distinguish API permissions from direct node-agent access.
+    - Identify sensitive data available through node and workload operations.
+    - Relate node credentials and endpoint protection to cluster trust.
+    outline:
+    - Protecting The Node Agent
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: true
+- id: section-050
+  title: Container Runtime
+  curriculum_item: Container Runtime
+  modules:
+  - id: module-01
+    title: Container Runtime Protection
+    objectives:
+    - Explain the runtime's execution authority and CRI boundary.
+    - Identify risks from exposed runtime sockets and privileged containers.
+    - Relate image selection to execution trust.
+    - Compare runtime isolation with application authorization.
+    outline:
+    - Runtime Interfaces And Host Authority
+    - Protecting Runtime Access And Execution Privileges
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: false
+- id: section-060
+  title: KubeProxy
+  curriculum_item: KubeProxy
+  modules:
+  - id: module-01
+    title: KubeProxy And Service Forwarding
+    objectives:
+    - Explain kube-proxy's Service forwarding responsibility.
+    - Distinguish forwarding from authentication and encryption.
+    - Identify risks from compromised forwarding configuration.
+    - Relate alternative implementations to the same security contract.
+    outline:
+    - Protecting The Service Traffic Path
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: false
+- id: section-070
+  title: Pod
+  curriculum_item: Pod
+  modules:
+  - id: module-01
+    title: Pod Execution And Credential Boundaries
+    objectives:
+    - Explain shared resources and trust within a multi-container Pod.
+    - Identify unnecessary host access and API credential exposure.
+    - Relate security context and admission to Pod execution.
+    - Describe replacement without assuming restored trust.
+    outline:
+    - Pod-Level Privileges And Application Access
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: false
+- id: section-080
+  title: Etcd
+  curriculum_item: Etcd
+  modules:
+  - id: module-01
+    title: Etcd And Stored Cluster Data
+    objectives:
+    - Explain why direct etcd access is a powerful security boundary.
+    - Distinguish transport encryption, storage encryption and authorization.
+    - Relate quorum, backups and access control to recovery.
+    - Identify sensitive information in datastore snapshots.
+    outline:
+    - Protecting The Cluster Datastore
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: true
+- id: section-090
+  title: Container Networking
+  curriculum_item: Container Networking
+  modules:
+  - id: module-01
+    title: Container Network Trust
+    objectives:
+    - Identify the network implementation's authority and dependencies.
+    - Distinguish Service forwarding from connection policy enforcement.
+    - Relate node access, plaintext traffic and trusted peers.
+    - Explain how network segmentation limits compromise paths.
+    outline:
+    - Pod Networks And Policy Boundaries
+    - Allowed Connections And Enforcement
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: false
+- id: section-100
+  title: Client Security
+  curriculum_item: Client Security
+  modules:
+  - id: module-01
+    title: Client Credentials And Configuration
+    objectives:
+    - Explain kubeconfig credential and context risks.
+    - Relate transport verification to the intended cluster identity.
+    - Identify sensitive data in local files and automation logs.
+    - Compare routine client authority with administrative authority.
+    outline:
+    - Protecting Administrative And Automated Clients
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: false
+- id: section-110
+  title: Storage
+  curriculum_item: Storage
+  modules:
+  - id: module-01
+    title: Storage Access And Data Security
+    objectives:
+    - Distinguish API storage resources from backend data permissions.
+    - Explain confidentiality risks in volume mounts and snapshots.
+    - Relate encryption, reclaim policy and recovery to data protection.
+    - Identify node and driver trust in mounted storage.
+    outline:
+    - Storage Permissions Beyond A Claim
+    playground: false
+    module_lab: false
+    diagrams: []
+  capstone: false
+  section_quiz: true
+assessment_format: YAML question banks, schema version 1; indexed in assessments/index.yaml

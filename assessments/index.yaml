@@ -1,0 +1,48 @@
+schema_version: 1
+course_id: ATS042
+status: draft
+banks:
+- id: ats042-section-040
+  path: sections/section-040/questions.yaml
+  question_count: 5
+  placement:
+    position: after
+    reading: sections/section-040/module-01/course-02-summary.md
+  covered_sections:
+  - section-010
+  - section-020
+  - section-030
+  - section-040
+- id: ats042-section-080
+  path: sections/section-080/questions.yaml
+  question_count: 5
+  placement:
+    position: after
+    reading: sections/section-080/module-01/course-02-summary.md
+  covered_sections:
+  - section-050
+  - section-060
+  - section-070
+  - section-080
+- id: ats042-section-110
+  path: sections/section-110/questions.yaml
+  question_count: 5
+  placement:
+    position: after
+    reading: sections/section-110/module-01/course-02-summary.md
+  covered_sections:
+  - section-090
+  - section-100
+  - section-110
+- id: ats042-domain-review
+  path: assessments/domain-review.yaml
+  question_count: 5
+  placement:
+    position: after
+    reading: sections/section-110/module-01/course-02-summary.md
+  covered_sections:
+  - section-010
+  - section-020
+  - section-040
+  - section-060
+  - section-080
