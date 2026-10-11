@@ -1,0 +1,111 @@
+schema_version: 1
+kind: question_bank
+id: ats042-section-110
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-110
+  title: 'Checkpoint: Storage'
+placement:
+  position: after
+  reading: sections/section-110/module-01/course-02-summary.md
+questions:
+- id: ats042-section-110-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain how network segmentation limits compromise paths.
+  source_readings:
+  - sections/section-090/module-01/course-02-allowed-connections-and-enforcement.md
+  prompt: NetworkPolicy objects exist, but the installed network system does not enforce them. What is
+    true?
+  options:
+  - id: a
+    text: API acceptance guarantees blocked traffic.
+    explanation: Storage of a declaration is not packet enforcement.
+  - id: b
+    text: The scheduler will automatically enforce every connection rule.
+    explanation: Scheduling is a different component responsibility.
+  - id: c
+    text: Declared policy is not proof of effective isolation.
+    explanation: Enforcement depends on the implementation.
+  correct_option: c
+  explanation: Enforcement depends on the implementation.
+- id: ats042-section-110-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain kubeconfig credential and context risks.
+  source_readings:
+  - sections/section-100/module-01/course-01-protecting-administrative-and-automated-clients.md
+  prompt: A client uses a familiar Pod name in the wrong kubeconfig context. What can go wrong?
+  options:
+  - id: a
+    text: Names become globally unique across clusters.
+    explanation: They remain scoped to the actual target.
+  - id: b
+    text: The request can affect or inspect the wrong cluster.
+    explanation: Resource identity includes target context and scope.
+  - id: c
+    text: The context automatically rewrites all server grants.
+    explanation: Client selection does not modify authorization.
+  correct_option: b
+  explanation: Resource identity includes target context and scope.
+- id: ats042-section-110-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Identify sensitive data in local files and automation logs.
+  source_readings:
+  - sections/section-100/module-01/course-01-protecting-administrative-and-automated-clients.md
+  prompt: A support archive includes a full kubeconfig with credential material. What is the concern?
+  options:
+  - id: a
+    text: Disclosure of usable client authority.
+    explanation: Configuration can contain sensitive credentials and helpers.
+  - id: b
+    text: Only a harmless public endpoint description.
+    explanation: The stated archive includes more than an address.
+  - id: c
+    text: A guarantee that every copied token is already revoked.
+    explanation: Validity depends on the actual credential lifecycle.
+  correct_option: a
+  explanation: Configuration can contain sensitive credentials and helpers.
+- id: ats042-section-110-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish API storage resources from backend data permissions.
+  source_readings:
+  - sections/section-110/module-01/course-01-storage-permissions-beyond-a-claim.md
+  prompt: A PVC is bound and storage is encrypted. What still needs review?
+  options:
+  - id: a
+    text: Only whether the claim's title uses uppercase letters.
+    explanation: Formatting does not define data access.
+  - id: b
+    text: Nothing because persistence guarantees confidentiality.
+    explanation: Retention and confidentiality are separate properties.
+  - id: c
+    text: Mounted readers, node and driver trust, and backend permissions.
+    explanation: Binding and encryption do not authorize every reader.
+  correct_option: c
+  explanation: Binding and encryption do not authorize every reader.
+- id: ats042-section-110-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Relate encryption, reclaim policy and recovery to data protection.
+  source_readings:
+  - sections/section-110/module-01/course-01-storage-permissions-beyond-a-claim.md
+  prompt: A replacement Pod mounts data altered during compromise. What has replacement failed to establish?
+  options:
+  - id: a
+    text: That every storage class is absent.
+    explanation: The stated volume exists; content trust is the issue.
+  - id: b
+    text: Trustworthy persistent content.
+    explanation: Changing the process object does not revert durable writes.
+  - id: c
+    text: That any Pod was created.
+    explanation: Creation can be real while its data remains affected.
+  correct_option: b
+  explanation: Changing the process object does not revert durable writes.

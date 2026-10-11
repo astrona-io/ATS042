@@ -1,0 +1,114 @@
+schema_version: 1
+kind: question_bank
+id: ats042-section-040
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-040
+  title: 'Checkpoint: Kubelet'
+placement:
+  position: after
+  reading: sections/section-040/module-01/course-02-summary.md
+questions:
+- id: ats042-section-040-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain the API server's identity, permission and admission checks.
+  source_readings:
+  - sections/section-010/module-01/course-01-protecting-the-cluster-api.md
+  prompt: An API caller authenticates but lacks the requested create permission. Which boundary rejects
+    it?
+  options:
+  - id: a
+    text: Container image retrieval.
+    explanation: The rejection concerns API authority before workload execution.
+  - id: b
+    text: Service endpoint selection.
+    explanation: Traffic backends do not grant API actions.
+  - id: c
+    text: Authorization.
+    explanation: Identity and permission are separate API decisions.
+  correct_option: c
+  explanation: Identity and permission are separate API decisions.
+- id: ats042-section-040-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish API audit evidence from application request logs.
+  source_readings:
+  - sections/section-010/module-01/course-01-protecting-the-cluster-api.md
+  prompt: An API audit record shows an accepted Pod creation. What does it not establish by itself?
+  options:
+  - id: a
+    text: Whether the response was accepted when the event includes it.
+    explanation: Response outcome is part of the stated evidence.
+  - id: b
+    text: That the application later started and behaved correctly.
+    explanation: Accepted API intent and runtime outcomes are different stages.
+  - id: c
+    text: Which resource action was requested when recorded by policy.
+    explanation: That is within relevant audit context.
+  correct_option: b
+  explanation: Accepted API intent and runtime outcomes are different stages.
+- id: ats042-section-040-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Relate controller availability to workload recovery.
+  source_readings:
+  - sections/section-020/module-01/course-01-securing-reconciliation-components.md
+  prompt: A replica controller receives forbidden responses when creating replacements. What should be
+    examined?
+  options:
+  - id: a
+    text: Its identity and effective API grants.
+    explanation: The failed action is a controller authorization boundary.
+  - id: b
+    text: Only the application's public route.
+    explanation: The replacement object is blocked before that route matters.
+  - id: c
+    text: Assume every datastore member is lost.
+    explanation: The specified permission error does not establish datastore loss.
+  correct_option: a
+  explanation: The failed action is a controller authorization boundary.
+- id: ats042-section-040-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Relate node labels and placement rules to security assumptions.
+  source_readings:
+  - sections/section-030/module-01/course-01-protecting-placement-decisions.md
+  prompt: Sensitive placement depends on a node label that an untrusted actor can change. What assumption
+    is weak?
+  options:
+  - id: a
+    text: Whether containers have any image format.
+    explanation: Artifact format does not make the label trustworthy.
+  - id: b
+    text: Whether all preferred affinity is mandatory.
+    explanation: Preferred rules remain preferences, but the stated issue is label authority.
+  - id: c
+    text: Trusted ownership of security-significant metadata.
+    explanation: A selector relies on the meaning and control of its labels.
+  correct_option: c
+  explanation: A selector relies on the meaning and control of its labels.
+- id: ats042-section-040-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish API permissions from direct node-agent access.
+  source_readings:
+  - sections/section-040/module-01/course-01-protecting-the-node-agent.md
+  prompt: A workload cannot read Secrets through the API but can access an inadequately protected kubelet
+    endpoint. What remains necessary?
+  options:
+  - id: a
+    text: Rename the namespace to match the node.
+    explanation: Naming does not protect node-agent operations.
+  - id: b
+    text: Evaluate and protect the direct node-agent path separately.
+    explanation: API grants do not automatically govern every alternate interface.
+  - id: c
+    text: Assume the workload has no sensitive access route.
+    explanation: The direct endpoint can be another boundary.
+  correct_option: b
+  explanation: API grants do not automatically govern every alternate interface.

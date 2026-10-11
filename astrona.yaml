@@ -1,9 +1,9 @@
-# Preparation scaffold. Technical pages stay draft until authoring and review.
+# Reading-only course. YAML assessments are registered separately in assessments/index.yaml.
 training:
   id: ATS042
   title: 'KCSA: Kubernetes Cluster Component Security'
-  description: Preparation scaffold for Kubernetes Cluster Component Security. Lessons and environments
-    are planned.
+  description: Concept lessons, diagrams and original scenario assessments covering every published objective
+    in this KCSA domain. No labs or playgrounds.
   certification:
     name: Kubernetes and Cloud Native Security Associate
     code: KCSA
@@ -25,7 +25,7 @@ training:
 modules:
 - id: module-intro
   title: Introduction
-  description: Planned introduction and authoring status.
+  description: Audience, learning approach, reading requirements and contribution process.
   content:
   - type: reading
     title: Introduction
@@ -41,111 +41,194 @@ modules:
     path: sections/intro/course-03-how-this-course-is-made.md
 - id: module-010
   title: API Server
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for API Server.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'API Server: Introduction'
     path: sections/section-010/README.md
   - type: reading
-    title: API Server
+    title: API Server Security Boundaries
     path: sections/section-010/module-01/course.md
+  - type: reading
+    title: Protecting The Cluster API
+    path: sections/section-010/module-01/course-01-protecting-the-cluster-api.md
+  - type: reading
+    title: Summary
+    path: sections/section-010/module-01/course-02-summary.md
 - id: module-020
   title: Controller Manager
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Controller Manager.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Controller Manager: Introduction'
     path: sections/section-020/README.md
   - type: reading
-    title: Controller Manager
+    title: Controller Manager Authority
     path: sections/section-020/module-01/course.md
+  - type: reading
+    title: Securing Reconciliation Components
+    path: sections/section-020/module-01/course-01-securing-reconciliation-components.md
+  - type: reading
+    title: Summary
+    path: sections/section-020/module-01/course-02-summary.md
 - id: module-030
   title: Scheduler
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Scheduler.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Scheduler: Introduction'
     path: sections/section-030/README.md
   - type: reading
-    title: Scheduler
+    title: Scheduler Integrity And Availability
     path: sections/section-030/module-01/course.md
+  - type: reading
+    title: Protecting Placement Decisions
+    path: sections/section-030/module-01/course-01-protecting-placement-decisions.md
+  - type: reading
+    title: Summary
+    path: sections/section-030/module-01/course-02-summary.md
 - id: module-040
   title: Kubelet
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Kubelet.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Kubelet: Introduction'
     path: sections/section-040/README.md
   - type: reading
-    title: Kubelet
+    title: Kubelet And Node Access
     path: sections/section-040/module-01/course.md
+  - type: reading
+    title: Protecting The Node Agent
+    path: sections/section-040/module-01/course-01-protecting-the-node-agent.md
+  - type: reading
+    title: Summary
+    path: sections/section-040/module-01/course-02-summary.md
 - id: module-050
   title: Container Runtime
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Container Runtime.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Container Runtime: Introduction'
     path: sections/section-050/README.md
   - type: reading
-    title: Container Runtime
+    title: Container Runtime Protection
     path: sections/section-050/module-01/course.md
+  - type: reading
+    title: Runtime Interfaces And Host Authority
+    path: sections/section-050/module-01/course-01-runtime-interfaces-and-host-authority.md
+  - type: reading
+    title: Protecting Runtime Access And Execution Privileges
+    path: sections/section-050/module-01/course-02-protecting-runtime-access-and-execution-privileges.md
+  - type: reading
+    title: Summary
+    path: sections/section-050/module-01/course-03-summary.md
 - id: module-060
   title: KubeProxy
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for KubeProxy.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'KubeProxy: Introduction'
     path: sections/section-060/README.md
   - type: reading
-    title: KubeProxy
+    title: KubeProxy And Service Forwarding
     path: sections/section-060/module-01/course.md
+  - type: reading
+    title: Protecting The Service Traffic Path
+    path: sections/section-060/module-01/course-01-protecting-the-service-traffic-path.md
+  - type: reading
+    title: Summary
+    path: sections/section-060/module-01/course-02-summary.md
 - id: module-070
   title: Pod
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Pod.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Pod: Introduction'
     path: sections/section-070/README.md
   - type: reading
-    title: Pod
+    title: Pod Execution And Credential Boundaries
     path: sections/section-070/module-01/course.md
+  - type: reading
+    title: Pod-Level Privileges And Application Access
+    path: sections/section-070/module-01/course-01-pod-level-privileges-and-application-access.md
+  - type: reading
+    title: Summary
+    path: sections/section-070/module-01/course-02-summary.md
 - id: module-080
   title: Etcd
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Etcd.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Etcd: Introduction'
     path: sections/section-080/README.md
   - type: reading
-    title: Etcd
+    title: Etcd And Stored Cluster Data
     path: sections/section-080/module-01/course.md
+  - type: reading
+    title: Protecting The Cluster Datastore
+    path: sections/section-080/module-01/course-01-protecting-the-cluster-datastore.md
+  - type: reading
+    title: Summary
+    path: sections/section-080/module-01/course-02-summary.md
 - id: module-090
   title: Container Networking
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Container Networking.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Container Networking: Introduction'
     path: sections/section-090/README.md
   - type: reading
-    title: Container Networking
+    title: Container Network Trust
     path: sections/section-090/module-01/course.md
+  - type: reading
+    title: Pod Networks And Policy Boundaries
+    path: sections/section-090/module-01/course-01-pod-networks-and-policy-boundaries.md
+  - type: reading
+    title: Allowed Connections And Enforcement
+    path: sections/section-090/module-01/course-02-allowed-connections-and-enforcement.md
+  - type: reading
+    title: Summary
+    path: sections/section-090/module-01/course-03-summary.md
 - id: module-100
   title: Client Security
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Client Security.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Client Security: Introduction'
     path: sections/section-100/README.md
   - type: reading
-    title: Client Security
+    title: Client Credentials And Configuration
     path: sections/section-100/module-01/course.md
+  - type: reading
+    title: Protecting Administrative And Automated Clients
+    path: sections/section-100/module-01/course-01-protecting-administrative-and-automated-clients.md
+  - type: reading
+    title: Summary
+    path: sections/section-100/module-01/course-02-summary.md
 - id: module-110
   title: Storage
-  description: Planned coverage of this curriculum objective.
+  description: Concept lessons and scenario reasoning for Storage.
+  draft: true
   content:
   - type: reading
-    title: Section Overview
+    title: 'Storage: Introduction'
     path: sections/section-110/README.md
   - type: reading
-    title: Storage
+    title: Storage Access And Data Security
     path: sections/section-110/module-01/course.md
+  - type: reading
+    title: Storage Permissions Beyond A Claim
+    path: sections/section-110/module-01/course-01-storage-permissions-beyond-a-claim.md
+  - type: reading
+    title: Summary
+    path: sections/section-110/module-01/course-02-summary.md
