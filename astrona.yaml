@@ -42,7 +42,7 @@ modules:
 - id: module-010
   title: API Server
   description: Concept lessons and scenario reasoning for API Server.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'API Server: Introduction'
@@ -59,7 +59,7 @@ modules:
 - id: module-020
   title: Controller Manager
   description: Concept lessons and scenario reasoning for Controller Manager.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Controller Manager: Introduction'
@@ -76,7 +76,7 @@ modules:
 - id: module-030
   title: Scheduler
   description: Concept lessons and scenario reasoning for Scheduler.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Scheduler: Introduction'
@@ -93,7 +93,7 @@ modules:
 - id: module-040
   title: Kubelet
   description: Concept lessons and scenario reasoning for Kubelet.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Kubelet: Introduction'
@@ -110,7 +110,7 @@ modules:
 - id: module-050
   title: Container Runtime
   description: Concept lessons and scenario reasoning for Container Runtime.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Container Runtime: Introduction'
@@ -130,7 +130,7 @@ modules:
 - id: module-060
   title: KubeProxy
   description: Concept lessons and scenario reasoning for KubeProxy.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'KubeProxy: Introduction'
@@ -147,7 +147,7 @@ modules:
 - id: module-070
   title: Pod
   description: Concept lessons and scenario reasoning for Pod.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Pod: Introduction'
@@ -164,7 +164,7 @@ modules:
 - id: module-080
   title: Etcd
   description: Concept lessons and scenario reasoning for Etcd.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Etcd: Introduction'
@@ -181,7 +181,7 @@ modules:
 - id: module-090
   title: Container Networking
   description: Concept lessons and scenario reasoning for Container Networking.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Container Networking: Introduction'
@@ -201,7 +201,7 @@ modules:
 - id: module-100
   title: Client Security
   description: Concept lessons and scenario reasoning for Client Security.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Client Security: Introduction'
@@ -218,7 +218,7 @@ modules:
 - id: module-110
   title: Storage
   description: Concept lessons and scenario reasoning for Storage.
-  draft: true
+  status: alpha
   content:
   - type: reading
     title: 'Storage: Introduction'
