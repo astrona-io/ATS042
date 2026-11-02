@@ -1,0 +1,111 @@
+schema_version: 1
+kind: question_bank
+id: ats042-section-080
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: section
+  id: section-080
+  title: 'Checkpoint: Etcd'
+placement:
+  position: after
+  reading: sections/section-080/module-01/course-02-summary.md
+questions:
+- id: ats042-section-080-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain the runtime's execution authority and CRI boundary.
+  source_readings:
+  - sections/section-050/module-01/course-02-protecting-runtime-access-and-execution-privileges.md
+  prompt: An application receives the runtime management socket. Why is that security-relevant?
+  options:
+  - id: a
+    text: Sockets are always harmless when mounted in a container.
+    explanation: The interface's operations determine its consequence.
+  - id: b
+    text: The socket is just an image tag.
+    explanation: Artifact references and management interfaces are different objects.
+  - id: c
+    text: It may control execution operations beyond its ordinary workload scope.
+    explanation: Runtime interfaces can carry powerful host authority.
+  correct_option: c
+  explanation: Runtime interfaces can carry powerful host authority.
+- id: ats042-section-080-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Distinguish forwarding from authentication and encryption.
+  source_readings:
+  - sections/section-060/module-01/course-01-protecting-the-service-traffic-path.md
+  prompt: A Service successfully forwards traffic. Which property is not automatically supplied?
+  options:
+  - id: a
+    text: A need for the application to listen.
+    explanation: The listener remains necessary for useful traffic.
+  - id: b
+    text: Application authentication, authorization or encryption.
+    explanation: Packet delivery is distinct from those security decisions.
+  - id: c
+    text: A possible path to an eligible backend.
+    explanation: Forwarding supports that path under the implementation.
+  correct_option: b
+  explanation: Packet delivery is distinct from those security decisions.
+- id: ats042-section-080-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain shared resources and trust within a multi-container Pod.
+  source_readings:
+  - sections/section-070/module-01/course-01-pod-level-privileges-and-application-access.md
+  prompt: An unneeded helper mounts a confidential volume read-write in the same Pod. What boundary has
+    expanded?
+  options:
+  - id: a
+    text: The set of processes trusted to read and change that data.
+    explanation: Explicit shared mounts give the helper data authority.
+  - id: b
+    text: Only the Service's external address scope.
+    explanation: The issue is mounted storage access.
+  - id: c
+    text: No boundary because different images cannot share files.
+    explanation: A shared mount can expose common data across images.
+  correct_option: a
+  explanation: Explicit shared mounts give the helper data authority.
+- id: ats042-section-080-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain why direct etcd access is a powerful security boundary.
+  source_readings:
+  - sections/section-080/module-01/course-01-protecting-the-cluster-datastore.md
+  prompt: A caller obtains direct datastore access. Which normal protection path can be bypassed?
+  options:
+  - id: a
+    text: Every network route in the infrastructure.
+    explanation: Direct storage access does not automatically bypass every network control.
+  - id: b
+    text: Only application readiness checks.
+    explanation: The central issue is access to stored cluster records.
+  - id: c
+    text: API-mediated resource permission and admission checks.
+    explanation: Direct etcd authority differs from ordinary API requests.
+  correct_option: c
+  explanation: Direct etcd authority differs from ordinary API requests.
+- id: ats042-section-080-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Identify sensitive information in datastore snapshots.
+  source_readings:
+  - sections/section-080/module-01/course-01-protecting-the-cluster-datastore.md
+  prompt: An old etcd snapshot is broadly readable. What should be assessed?
+  options:
+  - id: a
+    text: Nothing because the live API has narrow roles.
+    explanation: Live API grants do not constrain independent snapshot readers.
+  - id: b
+    text: Sensitive records and credentials retained in the copy.
+    explanation: Backups create a separate disclosure path.
+  - id: c
+    text: Only whether current Pod names are short.
+    explanation: Names do not protect snapshot content.
+  correct_option: b
+  explanation: Backups create a separate disclosure path.

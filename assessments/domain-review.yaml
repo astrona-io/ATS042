@@ -1,0 +1,112 @@
+schema_version: 1
+kind: question_bank
+id: ats042-domain-review
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material; not official examination questions.
+scope:
+  type: domain
+  id: domain-review
+  title: Kubernetes Cluster Component Security
+placement:
+  position: after
+  reading: sections/section-110/module-01/course-02-summary.md
+questions:
+- id: ats042-domain-review-q01
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Identify risks from excessive API exposure and powerful credentials.
+  source_readings:
+  - sections/section-010/module-01/course-01-protecting-the-cluster-api.md
+  prompt: A private API endpoint accepts a stolen powerful credential. Which distinction matters?
+  options:
+  - id: a
+    text: Private addressing guarantees no caller can misuse the API.
+    explanation: Reachability and permission are separate.
+  - id: b
+    text: Every such request is a scheduler scoring error.
+    explanation: API credential misuse is not node scoring.
+  - id: c
+    text: Network restriction does not remove misuse by an allowed authenticated identity.
+    explanation: The accepted path still depends on authority and credential protection.
+  correct_option: c
+  explanation: The accepted path still depends on authority and credential protection.
+- id: ats042-domain-review-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Distinguish Kubernetes controller behavior from application data repair.
+  source_readings:
+  - sections/section-020/module-01/course-01-securing-reconciliation-components.md
+  prompt: A controller restores desired Pods after a harmful data write. What remains outside that restoration?
+  options:
+  - id: a
+    text: Whether the desired replica count exists.
+    explanation: That is specifically within the restored resource state.
+  - id: b
+    text: Application data repair and external effects.
+    explanation: Resource reconciliation does not undo every data change.
+  - id: c
+    text: All resource creation.
+    explanation: The controller can perform that responsibility successfully.
+  correct_option: b
+  explanation: Resource reconciliation does not undo every data change.
+- id: ats042-domain-review-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Relate node credentials and endpoint protection to cluster trust.
+  source_readings:
+  - sections/section-040/module-01/course-01-protecting-the-node-agent.md
+  prompt: Host-level authority is lost on a worker. What assumption should be reconsidered?
+  options:
+  - id: a
+    text: Trust in the execution environment and accessible node credentials.
+    explanation: Container protections rely on the host and node authority.
+  - id: b
+    text: Only the application's visible Pod name.
+    explanation: A name does not restore kernel or credential trust.
+  - id: c
+    text: That namespace labels create separate hardware.
+    explanation: They do not create that isolation boundary.
+  correct_option: a
+  explanation: Container protections rely on the host and node authority.
+- id: ats042-domain-review-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Identify risks from compromised forwarding configuration.
+  source_readings:
+  - sections/section-060/module-01/course-01-protecting-the-service-traffic-path.md
+  prompt: Requests reach an unintended backend after a selector change. What evidence helps establish
+    the cause?
+  options:
+  - id: a
+    text: Only the monthly CPU average.
+    explanation: That does not identify the changed destination.
+  - id: b
+    text: Assume encryption proves backend selection is correct.
+    explanation: Protected transport and intended destination configuration are separate.
+  - id: c
+    text: Service selection, endpoint identity and relevant configuration history.
+    explanation: Forwarding follows a state relationship that needs inspection.
+  correct_option: c
+  explanation: Forwarding follows a state relationship that needs inspection.
+- id: ats042-domain-review-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Relate quorum, backups and access control to recovery.
+  source_readings:
+  - sections/section-080/module-01/course-01-protecting-the-cluster-datastore.md
+  prompt: A team restores etcd and assumes its external application database is restored too. What is
+    missing?
+  options:
+  - id: a
+    text: A rule that every datastore contains all volume bytes.
+    explanation: An etcd snapshot is not that universal application backup.
+  - id: b
+    text: An independent recovery procedure for that application data.
+    explanation: Cluster records and external stored data have different backup scopes.
+  - id: c
+    text: A new namespace display name.
+    explanation: Naming does not recover database content.
+  correct_option: b
+  explanation: Cluster records and external stored data have different backup scopes.
