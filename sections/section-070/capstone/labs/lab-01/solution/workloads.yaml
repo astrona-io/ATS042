@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pantry
+  namespace: galley
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oven
+  namespace: galley
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: chef
+  namespace: galley
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pantry
+  namespace: galley
+  labels:
+    app: pantry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pantry
+  template:
+    metadata:
+      labels:
+        app: pantry
+    spec:
+      serviceAccountName: pantry
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      automountServiceAccountToken: false
+      containers:
+        - name: pantry
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oven
+  namespace: galley
+  labels:
+    app: oven
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oven
+  template:
+    metadata:
+      labels:
+        app: oven
+    spec:
+      serviceAccountName: oven
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      automountServiceAccountToken: false
+      containers:
+        - name: oven
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

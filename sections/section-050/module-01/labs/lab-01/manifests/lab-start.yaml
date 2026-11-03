@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: courier
+  namespace: outpost
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: courier
+  namespace: outpost
+  labels:
+    app: courier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: courier
+  template:
+    metadata:
+      labels:
+        app: courier
+    spec:
+      serviceAccountName: courier
+      hostPID: true
+      containers:
+        - name: courier
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+          volumeMounts:
+            - name: runtime-dir
+              mountPath: /host-runtime
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: runtime-dir
+          hostPath:
+            path: /run/containerd
+            type: Directory

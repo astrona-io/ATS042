@@ -5,13 +5,18 @@ exam_objectives:
 ---
 # API Server
 
-This section teaches api server security boundaries. These ideas help you explain system behavior and choose a suitable approach in a KCSA scenario.
+The kube-apiserver is the front door of the cluster. Every user, controller, kubelet and pipeline talks to it, and every change to cluster state passes through it. This section follows one request through the server and shows which setting decides each step.
 
-You will work through API Server Security Boundaries. Each module introduces its goals, teaches the concepts through examples, and closes with a summary. Reusable YAML checkpoints review related objectives after selected section summaries. The course assessment index records their placement and coverage.
+## Learning outcomes
 
-## Learning Outcomes
+- Name the order of the request path and which check rejects a given request.
+- Explain the authentication methods the API server supports and what anonymous access means.
+- Write a Role and a RoleBinding that give a service account only the verbs it needs.
+- Find and remove bindings that grant rights to system:unauthenticated or to broad groups.
+- Explain mutating and validating admission and write a ValidatingAdmissionPolicy with a binding.
+- Explain what an audit policy records and why audit data is sensitive.
+- Explain why TLS verification, narrow network exposure and short-lived credentials are needed together.
 
-- Explain the API server's identity, permission and admission checks.
-- Relate API transport protection to authenticated peer identity.
-- Identify risks from excessive API exposure and powerful credentials.
-- Distinguish API audit evidence from application request logs.
+## What is in this section
+
+The section has one module, API Server Security Boundaries. It has 3 reading parts, a summary and a playground: a cluster with the Starfleet workloads, a pipeline service account that holds too many rights and an over-broad binding for unauthenticated users. A graded lab follows the reading part it practises. A capstone lab closes the section with a new scenario, and a knowledge check of ten questions follows the capstone.

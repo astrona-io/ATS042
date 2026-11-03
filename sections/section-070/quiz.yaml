@@ -1,0 +1,248 @@
+# Knowledge check for section 070. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-070
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-070
+  title: Pod Execution And Credential Boundaries
+questions:
+- id: ats042-070-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: List what containers in one pod share and what stays separate.
+  source_readings:
+  - sections/section-070/module-01/course-01-pod-level-privileges-and-application-access.md
+  prompt: Two containers run in one pod. One listens on 127.0.0.1:8080. Who can connect
+    to that listener?
+  options:
+  - id: a
+    text: Only the container that opened it.
+    explanation: Containers in a pod share one network namespace.
+  - id: b
+    text: Any container in the same pod.
+    explanation: Correct. They share loopback, the IP address and the port space.
+  - id: c
+    text: Only pods in the same namespace.
+    explanation: Loopback is not reachable from other pods.
+  - id: d
+    text: Every pod on the node.
+    explanation: Loopback stays inside the network namespace.
+  correct_option: b
+  explanation: They share loopback, the IP address and the port space.
+- id: ats042-070-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: List what containers in one pod share and what stays separate.
+  source_readings:
+  - sections/section-070/module-01/course-01-pod-level-privileges-and-application-access.md
+  prompt: A helper container mounts a shared volume without readOnly. What can it
+    do to the main container?
+  options:
+  - id: a
+    text: Nothing, because filesystems are always separate.
+    explanation: A shared volume is the exception.
+  - id: b
+    text: Read the main container image layers.
+    explanation: Image layers are not in the volume.
+  - id: c
+    text: Change files that the main container reads from the shared volume.
+    explanation: Correct. A writable mount lets it alter shared data.
+  - id: d
+    text: Change the node kernel.
+    explanation: A volume mount does not do that.
+  correct_option: c
+  explanation: A writable mount lets it alter shared data.
+- id: ats042-070-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Name the pod settings that remove container isolation.
+  source_readings:
+  - sections/section-070/module-01/course-01-pod-level-privileges-and-application-access.md
+  prompt: Which setting gives a container nearly all kernel capabilities and access
+    to host devices?
+  options:
+  - id: a
+    text: 'readOnlyRootFilesystem: true.'
+    explanation: This restricts writes.
+  - id: b
+    text: 'runAsNonRoot: true.'
+    explanation: This is a hardening setting.
+  - id: c
+    text: seccompProfile RuntimeDefault.
+    explanation: This restricts system calls.
+  - id: d
+    text: 'securityContext.privileged: true.'
+    explanation: Correct. It removes most of the isolation from the node.
+  correct_option: d
+  explanation: It removes most of the isolation from the node.
+- id: ats042-070-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Apply Pod Security Standards with namespace labels and explain
+    what the labels do not cover.
+  source_readings:
+  - sections/section-070/module-01/course-01-pod-level-privileges-and-application-access.md
+  prompt: A namespace gets the label pod-security.kubernetes.io/enforce=restricted.
+    What happens to a Deployment that was already running with a privileged pod?
+  options:
+  - id: a
+    text: The pod is stopped at once.
+    explanation: Existing pods are not stopped.
+  - id: b
+    text: The running pod keeps running, but a new pod from the same template is rejected.
+    explanation: Correct. The label checks pods at creation and update.
+  - id: c
+    text: The Deployment is deleted.
+    explanation: Admission does not delete controllers.
+  - id: d
+    text: The pod is changed to run unprivileged.
+    explanation: The label does not mutate pods.
+  correct_option: b
+  explanation: The label checks pods at creation and update.
+- id: ats042-070-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Apply Pod Security Standards with namespace labels and explain
+    what the labels do not cover.
+  source_readings:
+  - sections/section-070/module-01/course-01-pod-level-privileges-and-application-access.md
+  prompt: Which Pod Security mode returns a warning to the client and still accepts
+    the pod?
+  options:
+  - id: a
+    text: enforce.
+    explanation: Enforce rejects the pod.
+  - id: b
+    text: audit.
+    explanation: Audit records an annotation in the audit log.
+  - id: c
+    text: warn.
+    explanation: Correct. Warn tells the client about the violation.
+  - id: d
+    text: mutate.
+    explanation: There is no such mode.
+  correct_option: c
+  explanation: Warn tells the client about the violation.
+- id: ats042-070-q06
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Describe how a service account token is created, bound and refreshed.
+  source_readings:
+  - sections/section-070/module-01/course-02-service-account-tokens-and-api-credentials.md
+  prompt: What is true about the default service account token in a current cluster?
+  options:
+  - id: a
+    text: It never expires.
+    explanation: That describes a manually created long-lived token Secret.
+  - id: b
+    text: It is a bound token with an expiry that stops working when its pod is deleted.
+    explanation: Correct. The kubelet requests it for the pod and refreshes it.
+  - id: c
+    text: It is stored as a Secret for every service account.
+    explanation: Current clusters do not create these automatically.
+  - id: d
+    text: It is valid for every audience.
+    explanation: It has an audience, by default the API server.
+  correct_option: b
+  explanation: The kubelet requests it for the pod and refreshes it.
+- id: ats042-070-q07
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Remove the API token from a workload that does not need it.
+  source_readings:
+  - sections/section-070/module-01/course-02-service-account-tokens-and-api-credentials.md
+  prompt: A workload never calls the Kubernetes API. Which change removes its token?
+  options:
+  - id: a
+    text: Delete the ServiceAccount.
+    explanation: The pod would then fail to start.
+  - id: b
+    text: Add a NetworkPolicy.
+    explanation: Policy does not remove files.
+  - id: c
+    text: Remove all RBAC rules.
+    explanation: The token would still be mounted.
+  - id: d
+    text: Set automountServiceAccountToken to false and restart the workload so new
+      pods are created.
+    explanation: Correct. The volume is added only when a pod is created.
+  correct_option: d
+  explanation: The volume is added only when a pod is created.
+- id: ats042-070-q08
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why Secret read rights and Pod creation rights are credential
+    rights.
+  source_readings:
+  - sections/section-070/module-01/course-02-service-account-tokens-and-api-credentials.md
+  prompt: Why is the right to create pods in a namespace close to the right to read
+    its Secrets?
+  options:
+  - id: a
+    text: Pods can mount any Secret of the namespace and use any service account in
+      it.
+    explanation: Correct. A pod the user writes can read those credentials.
+  - id: b
+    text: Pod creation lists Secrets in the audit log.
+    explanation: This is not how the right works.
+  - id: c
+    text: A pod automatically copies Secrets to the user.
+    explanation: It does not.
+  - id: d
+    text: Pods hold every Secret by default.
+    explanation: They hold only what they mount.
+  correct_option: a
+  explanation: A pod the user writes can read those credentials.
+- id: ats042-070-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain the permissions behind exec, attach, port forwarding
+    and ephemeral containers.
+  source_readings:
+  - sections/section-070/module-01/course-03-interactive-access-and-recovery.md
+  prompt: Which RBAC rule allows kubectl exec?
+  options:
+  - id: a
+    text: get on pods.
+    explanation: This reads the object only.
+  - id: b
+    text: update on pods.
+    explanation: It changes the pod object.
+  - id: c
+    text: create on pods/exec.
+    explanation: Correct. Exec is a subresource that needs create.
+  - id: d
+    text: list on pods/log.
+    explanation: This is not exec and not a valid log verb.
+  correct_option: c
+  explanation: Exec is a subresource that needs create.
+- id: ats042-070-q10
+  type: single_choice
+  difficulty: advanced
+  learning_objective: List what recovery must replace after a pod is compromised.
+  source_readings:
+  - sections/section-070/module-01/course-03-interactive-access-and-recovery.md
+  prompt: A pod is compromised through an unpinned image. An engineer deletes the
+    pod and the Deployment creates a new one. Why is the incident not over?
+  options:
+  - id: a
+    text: The new pod uses the same template and image reference, so the same weakness
+      and exposed credentials remain.
+    explanation: Correct. Recovery needs trusted inputs and revoked credentials.
+  - id: b
+    text: Deleting a pod is not allowed.
+    explanation: It is allowed.
+  - id: c
+    text: The old pod keeps running.
+    explanation: It is removed.
+  - id: d
+    text: The service account is deleted.
+    explanation: It is not.
+  correct_option: a
+  explanation: Recovery needs trusted inputs and revoked credentials.

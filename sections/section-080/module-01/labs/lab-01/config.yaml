@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Close Paths To Stored Cluster Data (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-080-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: snapshotter-no-host-paths
+    description: snapshotter mounts no host path and has a ready replica
+    type: file
+    source: validation/validate-snapshotter-no-host-paths.sh
+    hint: Remove both hostPath volumes and their volumeMounts from the Deployment.
+  - name: snapshotter-one-secret
+    description: snapshotter gets backup-key in archive and cannot read other Secrets
+    type: file
+    source: validation/validate-snapshotter-one-secret.sh
+    hint: Replace the ClusterRoleBinding with a Role and RoleBinding in archive that
+      grant get on the Secret named backup-key.
+  - name: authenticated-denied
+    description: authenticated and unauthenticated groups cannot read Secrets in archive
+    type: file
+    source: validation/validate-authenticated-denied.sh
+    hint: Delete the RoleBinding that grants Secret reads to system:authenticated.
+  - name: password-in-secret
+    description: the password moved to a Secret and the container reads it from there
+    type: file
+    source: validation/validate-password-in-secret.sh
+    hint: Create the Secret snapshot-credentials with the key password, remove password
+      from the ConfigMap and use secretKeyRef.
+teardown:
+  keepCluster: false

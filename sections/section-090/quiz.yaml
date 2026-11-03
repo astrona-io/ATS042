@@ -1,0 +1,249 @@
+# Knowledge check for section 090. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-090
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-090
+  title: Container Network Trust
+questions:
+- id: ats042-090-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Show that the default cluster network allows traffic between
+    namespaces.
+  source_readings:
+  - sections/section-090/module-01/course-01-pod-networks-and-policy-boundaries.md
+  prompt: A new cluster runs a network plugin and no NetworkPolicy exists. A pod in
+    namespace a calls a pod in namespace b. What happens?
+  options:
+  - id: a
+    text: The call is blocked because namespaces isolate traffic.
+    explanation: Namespaces are not a network boundary.
+  - id: b
+    text: The call is allowed, because the default network lets every pod reach every
+      other pod.
+    explanation: Correct. Policy isolation starts only when a policy selects a pod.
+  - id: c
+    text: The call needs a Service of type NodePort.
+    explanation: It does not.
+  - id: d
+    text: The call works only through the scheduler.
+    explanation: The scheduler does not relay traffic.
+  correct_option: b
+  explanation: Policy isolation starts only when a policy selects a pod.
+- id: ats042-090-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain what a CNI plugin does and why policy needs a plugin
+    that enforces it.
+  source_readings:
+  - sections/section-090/module-01/course-01-pod-networks-and-policy-boundaries.md
+  prompt: A cluster uses a network plugin that does not implement NetworkPolicy. An
+    administrator applies a default deny policy. What happens?
+  options:
+  - id: a
+    text: The API server rejects the policy.
+    explanation: It accepts the object.
+  - id: b
+    text: The plugin enforces it anyway.
+    explanation: It cannot enforce what it does not implement.
+  - id: c
+    text: The policy is stored and nothing is enforced, and pods stay open.
+    explanation: Correct. The API server does not know what the plugin supports.
+  - id: d
+    text: Only egress is blocked.
+    explanation: Nothing is blocked.
+  correct_option: c
+  explanation: The API server does not know what the plugin supports.
+- id: ats042-090-q03
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Write a default deny policy and an allowance with a precise
+    source and port.
+  source_readings:
+  - sections/section-090/module-01/course-02-allowed-connections-and-enforcement.md
+  prompt: Which policy isolates every pod of a namespace for ingress and allows nothing?
+  options:
+  - id: a
+    text: An empty podSelector with policyTypes Ingress and no ingress rules.
+    explanation: Correct. An empty selector selects every pod, and with no rules nothing
+      is allowed.
+  - id: b
+    text: A podSelector with the label app set to all.
+    explanation: This selects a label, not every pod.
+  - id: c
+    text: An ingress rule with an empty from list.
+    explanation: An empty from list allows all sources.
+  - id: d
+    text: An egress policy with no rules.
+    explanation: This isolates egress.
+  correct_option: a
+  explanation: An empty selector selects every pod, and with no rules nothing is allowed.
+- id: ats042-090-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Write a default deny policy and an allowance with a precise
+    source and port.
+  source_readings:
+  - sections/section-090/module-01/course-02-allowed-connections-and-enforcement.md
+  prompt: A Service listens on port 80 and forwards to container port 8080. Which
+    port goes into the NetworkPolicy ingress rule?
+  options:
+  - id: a
+    text: 80, the Service port.
+    explanation: The rewrite happens before the policy is checked.
+  - id: b
+    text: 8080, the container port.
+    explanation: Correct. Policy is evaluated against the pod address and port.
+  - id: c
+    text: Both are required.
+    explanation: Only the container port is matched.
+  - id: d
+    text: The node port.
+    explanation: It does not apply here.
+  correct_option: b
+  explanation: Policy is evaluated against the pod address and port.
+- id: ats042-090-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain how policies combine and why source and destination
+    must both allow a connection.
+  source_readings:
+  - sections/section-090/module-01/course-02-allowed-connections-and-enforcement.md
+  prompt: Two policies select the same pod. One allows port 8080 from app=a. The other
+    allows port 9090 from app=b. What is allowed?
+  options:
+  - id: a
+    text: Only the first, because it was created first.
+    explanation: Order does not matter.
+  - id: b
+    text: Nothing, because they conflict.
+    explanation: Policies do not conflict.
+  - id: c
+    text: Only the intersection of the two.
+    explanation: Allowances are added.
+  - id: d
+    text: 'The union: app=a on 8080 and app=b on 9090.'
+    explanation: Correct. Policies only add allowed traffic.
+  correct_option: d
+  explanation: Policies only add allowed traffic.
+- id: ats042-090-q06
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Distinguish one peer with two selectors from two peers.
+  source_readings:
+  - sections/section-090/module-01/course-02-allowed-connections-and-enforcement.md
+  prompt: A from list has one entry with a namespaceSelector and a podSelector under
+    one dash. What does it match?
+  options:
+  - id: a
+    text: Every pod in the matching namespaces.
+    explanation: This would be a separate peer.
+  - id: b
+    text: Pods that match the pod selector in the namespaces that match the namespace
+      selector.
+    explanation: Correct. Both conditions apply to one peer.
+  - id: c
+    text: Every pod with the pod labels in any namespace.
+    explanation: The namespace selector limits it.
+  - id: d
+    text: Nothing.
+    explanation: It matches the described pods.
+  correct_option: b
+  explanation: Both conditions apply to one peer.
+- id: ats042-090-q07
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Write an egress policy that keeps DNS working.
+  source_readings:
+  - sections/section-090/module-01/course-03-egress-dns-and-traffic-outside-policy.md
+  prompt: After an egress policy is applied to a client, all requests fail with a
+    name resolution error, although the destination port is allowed. What was forgotten?
+  options:
+  - id: a
+    text: An ingress rule on the destination.
+    explanation: The error is about names, not connections.
+  - id: b
+    text: A rule that allows DNS traffic on port 53 to the cluster DNS pods.
+    explanation: Correct. Name lookup is blocked like any other egress.
+  - id: c
+    text: A NodePort.
+    explanation: It is unrelated.
+  - id: d
+    text: A new Service.
+    explanation: The Service exists.
+  correct_option: b
+  explanation: Name lookup is blocked like any other egress.
+- id: ats042-090-q08
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Write a default deny policy and an allowance with a precise
+    source and port.
+  source_readings:
+  - sections/section-090/module-01/course-02-allowed-connections-and-enforcement.md
+  prompt: What does a request that is dropped by a policy look like to curl?
+  options:
+  - id: a
+    text: A connection refused answer at once.
+    explanation: A refusal means the packet arrived and nothing listens.
+  - id: b
+    text: A timeout.
+    explanation: Correct. Dropped packets get no answer.
+  - id: c
+    text: An HTTP 403 status.
+    explanation: The network layer does not send HTTP.
+  - id: d
+    text: An HTTP 500 status.
+    explanation: It does not.
+  correct_option: b
+  explanation: Dropped packets get no answer.
+- id: ats042-090-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: List traffic that NetworkPolicy does not control.
+  source_readings:
+  - sections/section-090/module-01/course-03-egress-dns-and-traffic-outside-policy.md
+  prompt: Which traffic can a standard NetworkPolicy not control?
+  options:
+  - id: a
+    text: TCP connections between pods.
+    explanation: It controls these.
+  - id: b
+    text: Which HTTP path a caller may request.
+    explanation: Correct. Standard policy works on addresses, ports and protocols.
+  - id: c
+    text: UDP traffic to DNS.
+    explanation: It controls these.
+  - id: d
+    text: Traffic from a pod to an address range.
+    explanation: Use ipBlock.
+  correct_option: b
+  explanation: Standard policy works on addresses, ports and protocols.
+- id: ats042-090-q10
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: List traffic that NetworkPolicy does not control.
+  source_readings:
+  - sections/section-090/module-01/course-03-egress-dns-and-traffic-outside-policy.md
+  prompt: Why is an ipBlock a poor way to name another pod?
+  options:
+  - id: a
+    text: Pod addresses change when pods are replaced.
+    explanation: Correct. A rule with a pod address breaks or points at another pod.
+  - id: b
+    text: ipBlock is only for IPv6.
+    explanation: It supports both.
+  - id: c
+    text: ipBlock needs a namespace.
+    explanation: It does not.
+  - id: d
+    text: ipBlock allows only UDP.
+    explanation: It does not.
+  correct_option: a
+  explanation: A rule with a pod address breaks or points at another pod.

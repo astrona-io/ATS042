@@ -3,15 +3,21 @@ draft: true
 exam_objectives:
   - Storage
 ---
-# Storage
+# Storage Access And Data Security
 
-This section teaches storage access and data security. These ideas help you explain system behavior and choose a suitable approach in a KCSA scenario.
+A persistent claim keeps data after a pod is replaced, and it hands that data to every pod that names the claim. Storage security means knowing every reader, every copy and every administrator in the path.
 
-You will work through Storage Access And Data Security. Each module introduces its goals, teaches the concepts through examples, and closes with a summary. Reusable YAML checkpoints review related objectives after selected section summaries. The course assessment index records their placement and coverage.
+## Learning outcomes
 
-## Learning Outcomes
+- Describe how a claim, a volume and a storage class relate and how binding works.
+- Explain why permission on a claim object does not control the data.
+- Name the rights that give access to mounted data.
+- Use read-only mounts and explain what they do not protect.
+- Compare access modes and state what they promise.
+- Explain the reclaim policies and the risk of each.
+- Explain why host path volumes are dangerous and how Pod Security Admission refuses them.
+- Explain what snapshots, backups and encryption at rest protect and what deletion leaves behind.
 
-- Distinguish API storage resources from backend data permissions.
-- Explain confidentiality risks in volume mounts and snapshots.
-- Relate encryption, reclaim policy and recovery to data protection.
-- Identify node and driver trust in mounted storage.
+## What is in this section
+
+The section has one module, Storage Access And Data Security. It has 3 reading parts, a summary and a playground: a cluster to create claims, mount them from several pods and follow a volume through deletion. A graded lab follows the reading part it practises. A capstone lab closes the section with a new scenario, and a knowledge check of ten questions follows the capstone.

@@ -1,0 +1,258 @@
+# Knowledge check for section 030. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-030
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-030
+  title: Scheduler
+questions:
+- id: ats042-030-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: 'Describe the scheduling cycle: filtering, scoring and binding.'
+  source_readings:
+  - sections/section-030/module-01/course-01-protecting-placement-decisions.md
+  prompt: A new pod has no node. Which component picks one, and how does the choice
+    reach the kubelet?
+  options:
+  - id: a
+    text: The kubelet picks a node and starts the pod.
+    explanation: The kubelet runs pods that are already assigned to its node.
+  - id: b
+    text: The kube-scheduler filters and scores nodes and records the choice through
+      a binding request to the API server. The kubelet then sees the pod assigned
+      to it.
+    explanation: Correct. This is the scheduling and binding sequence.
+  - id: c
+    text: The controller manager picks a node and writes it to etcd.
+    explanation: Controllers do not choose nodes.
+  - id: d
+    text: The container runtime picks a node.
+    explanation: The runtime acts on one node only.
+  correct_option: b
+  explanation: This is the scheduling and binding sequence.
+- id: ats042-030-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Use nodeSelector, affinity, taints and tolerations, and explain
+    what each one guarantees.
+  source_readings:
+  - sections/section-030/module-01/course-02-placement-rules-taints-and-labels.md
+  prompt: A node has the taint `tier=restricted:NoSchedule`. A pod has a matching
+    toleration and no nodeSelector or affinity. What is guaranteed?
+  options:
+  - id: a
+    text: The pod runs only on that node.
+    explanation: A toleration only allows the pod to run there.
+  - id: b
+    text: The pod may run on that node, but the scheduler can still place it on other
+      nodes.
+    explanation: Correct. A toleration permits and does not attract.
+  - id: c
+    text: The pod is rejected.
+    explanation: Tolerations do not cause rejection.
+  - id: d
+    text: Pods without the toleration may also run there.
+    explanation: The taint still repels them.
+  correct_option: b
+  explanation: A toleration permits and does not attract.
+- id: ats042-030-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Use nodeSelector, affinity, taints and tolerations, and explain
+    what each one guarantees.
+  source_readings:
+  - sections/section-030/module-01/course-02-placement-rules-taints-and-labels.md
+  prompt: To run a sensitive pod only on the restricted node, which combination is
+    correct?
+  options:
+  - id: a
+    text: A toleration only.
+    explanation: The pod could land elsewhere.
+  - id: b
+    text: A nodeSelector for the restricted label and a toleration for the taint on
+      that node.
+    explanation: Correct. The selector attracts and the toleration permits.
+  - id: c
+    text: A nodeSelector only, with the node tainted.
+    explanation: The taint would block the pod.
+  - id: d
+    text: A taint on the pod.
+    explanation: Taints are set on nodes.
+  correct_option: b
+  explanation: The selector attracts and the toleration permits.
+- id: ats042-030-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain why labels used for security need controlled ownership,
+    and what NodeRestriction does.
+  source_readings:
+  - sections/section-030/module-01/course-02-placement-rules-taints-and-labels.md
+  prompt: Why is a label like `tier=restricted` only as trustworthy as the RBAC on
+    nodes?
+  options:
+  - id: a
+    text: Labels are encrypted.
+    explanation: Labels are plain metadata.
+  - id: b
+    text: Anyone who can patch nodes can add the label to another node or remove it
+      from the restricted one, which changes where pods can run.
+    explanation: Correct. Placement follows labels, so label ownership is part of
+      the boundary.
+  - id: c
+    text: The scheduler ignores labels.
+    explanation: Selectors use labels.
+  - id: d
+    text: Only the kubelet can read labels.
+    explanation: Any client with read access can.
+  correct_option: b
+  explanation: Placement follows labels, so label ownership is part of the boundary.
+- id: ats042-030-q05
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why labels used for security need controlled ownership,
+    and what NodeRestriction does.
+  source_readings:
+  - sections/section-030/module-01/course-02-placement-rules-taints-and-labels.md
+  prompt: What does the NodeRestriction admission plugin do for labels?
+  options:
+  - id: a
+    text: It lets kubelets set any label on any node.
+    explanation: It restricts kubelets.
+  - id: b
+    text: It stops a kubelet from setting labels that use the `node-restriction.kubernetes.io/`
+      prefix, and from modifying other nodes, so such labels can be used for isolation.
+    explanation: Correct. The prefix is reserved for administrators.
+  - id: c
+    text: It deletes labels after one hour.
+    explanation: It does not expire labels.
+  - id: d
+    text: It hides nodes from the scheduler.
+    explanation: It does not hide nodes.
+  correct_option: b
+  explanation: The prefix is reserved for administrators.
+- id: ats042-030-q06
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain how spec.nodeName and the pods/binding subresource bypass
+    the scheduler, and block them.
+  source_readings:
+  - sections/section-030/module-01/course-03-binding-priority-and-availability.md
+  prompt: A pod is created with `spec.nodeName` set to a worker. What happens?
+  options:
+  - id: a
+    text: The scheduler still filters nodes for it.
+    explanation: A pod with nodeName already counts as assigned.
+  - id: b
+    text: The scheduler skips the pod and the kubelet on that node runs it, so selectors
+      and taints that the scheduler enforces are not applied.
+    explanation: Correct. Setting nodeName bypasses scheduling.
+  - id: c
+    text: The API server always rejects the pod.
+    explanation: It is accepted unless a policy rejects it.
+  - id: d
+    text: The pod waits Pending.
+    explanation: It is already assigned.
+  correct_option: b
+  explanation: Setting nodeName bypasses scheduling.
+- id: ats042-030-q07
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain how spec.nodeName and the pods/binding subresource bypass
+    the scheduler, and block them.
+  source_readings:
+  - sections/section-030/module-01/course-03-binding-priority-and-availability.md
+  prompt: Which RBAC rule lets an identity place a pod on any node without going through
+    the scheduler logic?
+  options:
+  - id: a
+    text: "`get` on `nodes`."
+    explanation: Reading nodes does not assign pods.
+  - id: b
+    text: "`create` on `pods/binding`."
+    explanation: Correct. A binding assigns a pod to a node.
+  - id: c
+    text: "`list` on `events`."
+    explanation: Events are read only here.
+  - id: d
+    text: "`watch` on `pods`."
+    explanation: Watching does not assign.
+  correct_option: b
+  explanation: A binding assigns a pod to a node.
+- id: ats042-030-q08
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Diagnose a Pending pod from its FailedScheduling events.
+  source_readings:
+  - sections/section-030/module-01/course-03-binding-priority-and-availability.md
+  prompt: 'A pod is Pending. The event says `0/3 nodes are available: 1 node(s) had
+    untolerated taint, 2 Insufficient cpu`. What is the most likely cause?'
+  options:
+  - id: a
+    text: The image is missing.
+    explanation: Image problems appear after scheduling.
+  - id: b
+    text: The pod asks for more CPU than the untainted nodes can offer and does not
+      tolerate the taint on the third.
+    explanation: Correct. FailedScheduling events state the filter results.
+  - id: c
+    text: The kubelet is down on all nodes.
+    explanation: That shows as a node condition.
+  - id: d
+    text: The API server is unavailable.
+    explanation: The event would not be written.
+  correct_option: b
+  explanation: FailedScheduling events state the filter results.
+- id: ats042-030-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Use PriorityClass, preemption and ResourceQuota scopes to protect
+    availability.
+  source_readings:
+  - sections/section-030/module-01/course-03-binding-priority-and-availability.md
+  prompt: How can a namespace limit who may use a high PriorityClass?
+  options:
+  - id: a
+    text: A ResourceQuota with a scopeSelector on PriorityClass and a low hard limit.
+    explanation: Correct. Quota scopes count pods by priority class.
+  - id: b
+    text: A NetworkPolicy.
+    explanation: Network policy does not cover priority.
+  - id: c
+    text: A larger node.
+    explanation: Node size does not limit class use.
+  - id: d
+    text: A bigger Deployment.
+    explanation: This does not limit the class.
+  correct_option: a
+  explanation: Quota scopes count pods by priority class.
+- id: ats042-030-q10
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Read the scheduler flags and configuration that affect security.
+  source_readings:
+  - sections/section-030/module-01/course-01-protecting-placement-decisions.md
+  prompt: Why is it safer to bind the scheduler secure port to the node address only
+    where needed, and to keep `--profiling` off?
+  options:
+  - id: a
+    text: The port serves metrics, health and debug endpoints that expose internal
+      state to anything that can reach it.
+    explanation: Correct. Less exposure means fewer paths to abuse.
+  - id: b
+    text: The scheduler stops without it.
+    explanation: It does not stop.
+  - id: c
+    text: Profiling encrypts traffic.
+    explanation: It does not.
+  - id: d
+    text: It speeds up scheduling.
+    explanation: Speed is not the reason.
+  correct_option: a
+  explanation: Less exposure means fewer paths to abuse.

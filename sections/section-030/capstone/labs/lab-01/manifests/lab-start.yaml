@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: armada
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: armada-ops
+  namespace: armada
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: urgent
+value: 1000000
+globalDefault: false
+description: "Pods that may preempt ordinary workloads"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: placement-helper
+rules:
+  - apiGroups: [""]
+    resources: ["pods/binding"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: armada-ops-placement
+subjects:
+  - kind: ServiceAccount
+    name: armada-ops
+    namespace: armada
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: placement-helper
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cargo
+  namespace: armada
+  labels:
+    app: cargo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cargo
+  template:
+    metadata:
+      labels:
+        app: cargo
+    spec:
+      containers:
+        - name: cargo
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: "64"
+              memory: 8Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relay
+  namespace: armada
+  labels:
+    app: relay
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: relay
+  template:
+    metadata:
+      labels:
+        app: relay
+    spec:
+      containers:
+        - name: relay
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 8Mi

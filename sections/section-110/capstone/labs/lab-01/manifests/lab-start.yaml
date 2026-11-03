@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: depot
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: writer
+  namespace: depot
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: auditor
+  namespace: depot
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scanner
+  namespace: depot
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: intern
+  namespace: depot
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: manifest
+  namespace: depot
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 64Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: writer
+  namespace: depot
+  labels:
+    app: writer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: writer
+  template:
+    metadata:
+      labels:
+        app: writer
+    spec:
+      serviceAccountName: writer
+      containers:
+        - name: writer
+          image: busybox:1.37.0
+          command: ["sh", "-c", "while true; do date >> /data/log.txt; sleep 10; done"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: manifest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auditor
+  namespace: depot
+  labels:
+    app: auditor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auditor
+  template:
+    metadata:
+      labels:
+        app: auditor
+    spec:
+      serviceAccountName: auditor
+      containers:
+        - name: auditor
+          image: busybox:1.37.0
+          command: ["sh", "-c", "while true; do cat /data/log.txt > /dev/null 2>&1; sleep 10; done"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: manifest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scanner
+  namespace: depot
+  labels:
+    app: scanner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scanner
+  template:
+    metadata:
+      labels:
+        app: scanner
+    spec:
+      serviceAccountName: scanner
+      containers:
+        - name: scanner
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          volumeMounts:
+            - name: node
+              mountPath: /host
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: node
+          hostPath:
+            path: /var/log
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: intern
+  namespace: depot
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "create"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: intern
+  namespace: depot
+subjects:
+  - kind: ServiceAccount
+    name: intern
+    namespace: depot
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: intern

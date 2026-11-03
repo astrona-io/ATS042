@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Limit Rights That Reach The Kubelet (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-040-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: monitor-no-node-proxy
+    description: monitor cannot use nodes/proxy
+    type: file
+    source: validation/validate-monitor-no-node-proxy.sh
+    hint: Remove nodes/proxy and the create verb from the ClusterRole node-monitor.
+  - name: monitor-keeps-metrics
+    description: monitor can still read nodes, metrics and stats
+    type: file
+    source: validation/validate-monitor-keeps-metrics.sh
+    hint: Keep get and list on nodes, and get on nodes/metrics and nodes/stats.
+  - name: debugger-only-in-outpost
+    description: debugger execs only in outpost
+    type: file
+    source: validation/validate-debugger-only-in-outpost.sh
+    hint: Delete the ClusterRoleBinding and create a RoleBinding in outpost for the
+      ClusterRole pod-debugger.
+  - name: intern-cannot-approve-csr
+    description: intern cannot approve certificate signing requests
+    type: file
+    source: validation/validate-intern-cannot-approve-csr.sh
+    hint: Remove the approval subresource and the signers rule from the ClusterRole
+      csr-approver.
+teardown:
+  keepCluster: false

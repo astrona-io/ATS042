@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Secure A Kitchen Namespace (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-070
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: pantry-hardened
+    description: pantry drops privileges and host access and has a ready replica
+    type: file
+    source: validation/validate-pantry-hardened.sh
+    hint: Remove privileged and hostNetwork. Set runAsNonRoot, the RuntimeDefault
+      seccomp profile, allowPrivilegeEscalation false and drop ALL.
+  - name: oven-hardened
+    description: oven drops privileges and host access and has a ready replica
+    type: file
+    source: validation/validate-oven-hardened.sh
+    hint: Remove hostPID and the hostPath volume with its mount, then apply the same
+      restricted settings.
+  - name: galley-no-tokens
+    description: no workload in galley mounts an API token
+    type: file
+    source: validation/validate-galley-no-tokens.sh
+    hint: Set automountServiceAccountToken to false on pantry, oven and chef and in
+      both pod templates.
+  - name: chef-read-only
+    description: chef reads pods and logs and cannot read Secrets, exec, debug or
+      write pods
+    type: file
+    source: validation/validate-chef-read-only.sh
+    hint: Rewrite chef-role with get, list and watch on pods and get on pods/log only.
+  - name: galley-restricted
+    description: galley enforces the restricted standard and rejects a privileged
+      pod
+    type: file
+    source: validation/validate-galley-restricted.sh
+    hint: Label the namespace with pod-security.kubernetes.io/enforce=restricted.
+teardown:
+  keepCluster: false

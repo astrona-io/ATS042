@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: visitor
+  namespace: starfleet
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visitor
+  namespace: starfleet
+  labels:
+    app: visitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: visitor
+  template:
+    metadata:
+      labels:
+        app: visitor
+    spec:
+      serviceAccountName: visitor
+      containers:
+        - name: visitor
+          image: curlimages/curl:8.22.0
+          command: ["sh", "-c", "while true; do sleep 30; done"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: beacon
+  namespace: outpost
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beacon
+  namespace: outpost
+  labels:
+    app: beacon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beacon
+  template:
+    metadata:
+      labels:
+        app: beacon
+    spec:
+      serviceAccountName: beacon
+      containers:
+        - name: beacon
+          image: mccutchen/go-httpbin:2.25.0
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beacon
+  namespace: outpost
+spec:
+  selector:
+    app: beacon
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

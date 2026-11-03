@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Remove Host Access And Enforce A Pod Security Level (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-050-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: courier-not-privileged
+    description: courier is not privileged and drops all capabilities
+    type: file
+    source: validation/validate-courier-not-privileged.sh
+    hint: Remove privileged and capabilities.add. Set allowPrivilegeEscalation to
+      false and capabilities.drop to ["ALL"].
+  - name: courier-no-host-access
+    description: courier has no hostPath volume or host namespace and is ready
+    type: file
+    source: validation/validate-courier-no-host-access.sh
+    hint: Remove the volume runtime-dir with its mount and the field hostPID. Wait
+      for the rollout to finish.
+  - name: outpost-enforces-baseline
+    description: outpost enforces baseline or restricted and rejects a privileged
+      pod
+    type: file
+    source: validation/validate-outpost-enforces-baseline.sh
+    hint: Label the namespace outpost with pod-security.kubernetes.io/enforce=baseline.
+  - name: sandboxed-runtimeclass
+    description: RuntimeClass sandboxed has the handler runsc and the overhead
+    type: file
+    source: validation/validate-sandboxed-runtimeclass.sh
+    hint: Create a RuntimeClass with handler runsc and overhead.podFixed of cpu 100m
+      and memory 64Mi.
+teardown:
+  keepCluster: false

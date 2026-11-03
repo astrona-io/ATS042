@@ -1,0 +1,271 @@
+# Knowledge check for section 020. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-020
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-020
+  title: Controller Manager
+questions:
+- id: ats042-020-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain the reconcile loop and name the built-in controllers
+    that matter for security.
+  source_readings:
+  - sections/section-020/module-01/course-01-securing-reconciliation-components.md
+  prompt: A controller sees that a Deployment declares three replicas but its ReplicaSet
+    has two ready pods. What does the controller do?
+  options:
+  - id: a
+    text: It asks the kubelet to start a container directly.
+    explanation: Controllers write objects through the API server. The kubelet reacts
+      to pods assigned to its node.
+  - id: b
+    text: It writes a change through the API server so the ReplicaSet creates another
+      pod, and repeats until the states match.
+    explanation: 'Correct. This is the reconcile loop: compare, write, observe again.'
+  - id: c
+    text: It edits etcd directly.
+    explanation: Controllers have no datastore access of their own.
+  - id: d
+    text: It waits for an administrator to approve.
+    explanation: Reconciliation is automatic.
+  correct_option: b
+  explanation: 'This is the reconcile loop: compare, write, observe again.'
+- id: ats042-020-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain why use-service-account-credentials gives each controller
+    its own identity.
+  source_readings:
+  - sections/section-020/module-01/course-02-controller-identities-and-rbac.md
+  prompt: The flag `--use-service-account-credentials=true` is set on the kube-controller-manager.
+    What is the effect?
+  options:
+  - id: a
+    text: All controllers share the identity system:kube-controller-manager.
+    explanation: That is the behaviour when the flag is false.
+  - id: b
+    text: Each controller uses its own service account, with the matching system:controller
+      role.
+    explanation: Correct. This narrows what one compromised controller loop can do.
+  - id: c
+    text: Pods use the controller manager token.
+    explanation: The flag does not change pod tokens.
+  - id: d
+    text: The API server skips authorization for controllers.
+    explanation: Authorization still applies.
+  correct_option: b
+  explanation: This narrows what one compromised controller loop can do.
+- id: ats042-020-q03
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Write least-privilege RBAC for a custom controller, including
+    resourceNames and namespace scope.
+  source_readings:
+  - sections/section-020/module-01/course-02-controller-identities-and-rbac.md
+  prompt: A custom controller only reconciles one ConfigMap named `fleet-state`. Which
+    rule is the narrowest correct one?
+  options:
+  - id: a
+    text: verbs get, update on configmaps, no resourceNames, in a ClusterRole.
+    explanation: This covers every ConfigMap in every namespace it is bound in.
+  - id: b
+    text: verbs get, update, patch on configmaps with resourceNames [fleet-state],
+      in a Role in the same namespace.
+    explanation: Correct. resourceNames limit the rule to one object, and a Role limits
+      it to one namespace.
+  - id: c
+    text: verbs * on configmaps with resourceNames [fleet-state].
+    explanation: The verbs are broader than needed, including delete.
+  - id: d
+    text: verbs list on configmaps with resourceNames [fleet-state].
+    explanation: resourceNames do not restrict list and watch of a collection, and
+      the rule lacks update.
+  correct_option: b
+  explanation: resourceNames limit the rule to one object, and a Role limits it to
+    one namespace.
+- id: ats042-020-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain the escalate, bind and impersonate verbs and why a controller
+    should not hold them.
+  source_readings:
+  - sections/section-020/module-01/course-02-controller-identities-and-rbac.md
+  prompt: A service account holds `bind` on `clusterroles` and can create ClusterRoleBindings.
+    What can it do?
+  options:
+  - id: a
+    text: Bind itself to cluster-admin even though it does not hold those rights.
+    explanation: Correct. The bind verb allows creating a binding to a role whose
+      rights the caller does not hold.
+  - id: b
+    text: Nothing, because RBAC always blocks self-grants.
+    explanation: The block applies only without escalate or bind.
+  - id: c
+    text: Only read roles.
+    explanation: Create and bind are write actions.
+  - id: d
+    text: Delete nodes.
+    explanation: Not unless a rule allows it, but it can grant itself that right.
+  correct_option: a
+  explanation: The bind verb allows creating a binding to a role whose rights the
+    caller does not hold.
+- id: ats042-020-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Use ownerReferences and garbage collection, and explain what
+    a paused Deployment does.
+  source_readings:
+  - sections/section-020/module-01/course-03-ownership-recovery-and-failure.md
+  prompt: A ConfigMap has an ownerReference to a Deployment. The Deployment is deleted
+    with the default (background) cascading deletion. What happens to the ConfigMap?
+  options:
+  - id: a
+    text: It is kept, because ConfigMaps are never deleted by controllers.
+    explanation: The garbage collector deletes dependents whose owner is gone.
+  - id: b
+    text: The garbage collector deletes it after the owner is deleted.
+    explanation: Correct. Dependents with an ownerReference to a deleted owner are
+      collected.
+  - id: c
+    text: The kubelet deletes it.
+    explanation: The kubelet does not run garbage collection for objects.
+  - id: d
+    text: The API server rejects the Deployment deletion.
+    explanation: Dependents do not block a default deletion.
+  correct_option: b
+  explanation: Dependents with an ownerReference to a deleted owner are collected.
+- id: ats042-020-q06
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Describe what stops working, and what keeps running, when the
+    controller manager is unavailable.
+  source_readings:
+  - sections/section-020/module-01/course-03-ownership-recovery-and-failure.md
+  prompt: The kube-controller-manager is down for ten minutes. What is true?
+  options:
+  - id: a
+    text: All running pods stop immediately.
+    explanation: Running containers are managed by the kubelet and the runtime.
+  - id: b
+    text: Running pods keep running, but a deleted pod is not replaced and scaling
+      does not happen until it returns.
+    explanation: Correct. ReplicaSet and Deployment reconciliation stop with the controller
+      manager.
+  - id: c
+    text: Existing Services stop forwarding.
+    explanation: kube-proxy and the CNI plugin keep their rules.
+  - id: d
+    text: The API server rejects all requests.
+    explanation: The API server is independent of the controller manager.
+  correct_option: b
+  explanation: ReplicaSet and Deployment reconciliation stop with the controller manager.
+- id: ats042-020-q07
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Use ownerReferences and garbage collection, and explain what
+    a paused Deployment does.
+  source_readings:
+  - sections/section-020/module-01/course-03-ownership-recovery-and-failure.md
+  prompt: 'A Deployment shows `spec.paused: true` and no pods. Why?'
+  options:
+  - id: a
+    text: The scheduler is down.
+    explanation: No pods exist because the Deployment controller did not create them.
+  - id: b
+    text: The Deployment controller ignores a paused Deployment, so it does not roll
+      out changes or create pods.
+    explanation: Correct. Resume it with `kubectl rollout resume`.
+  - id: c
+    text: The namespace has a quota.
+    explanation: A quota would show events on the ReplicaSet.
+  - id: d
+    text: The kubelet paused the node.
+    explanation: Pausing is a field on the Deployment.
+  correct_option: b
+  explanation: Resume it with `kubectl rollout resume`.
+- id: ats042-020-q08
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Write least-privilege RBAC for a custom controller, including
+    resourceNames and namespace scope.
+  source_readings:
+  - sections/section-020/module-01/course-02-controller-identities-and-rbac.md
+  prompt: A controller identity is compromised. Which statement describes the damage
+    correctly?
+  options:
+  - id: a
+    text: The attacker holds exactly the permissions of that identity, so a wildcard
+      role gives cluster-wide control.
+    explanation: Correct. A controller acts only through API permissions.
+  - id: b
+    text: The attacker can only read objects.
+    explanation: The attacker gets the identity, with whatever verbs its roles allow.
+  - id: c
+    text: The attacker gets root on every node.
+    explanation: Not directly, but a role that can create pods or read Secrets can
+      lead there.
+  - id: d
+    text: Nothing, because controllers are trusted.
+    explanation: Trust does not remove the need for least privilege.
+  correct_option: a
+  explanation: A controller acts only through API permissions.
+- id: ats042-020-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Write least-privilege RBAC for a custom controller, including
+    resourceNames and namespace scope.
+  source_readings:
+  - sections/section-020/module-01/course-02-controller-identities-and-rbac.md
+  prompt: Why does `list` on Secrets deserve extra care in a controller role?
+  options:
+  - id: a
+    text: List returns only the names of Secrets.
+    explanation: List returns the full objects, including data.
+  - id: b
+    text: List and watch return the full content of every matching Secret.
+    explanation: Correct. A role with list or watch on Secrets exposes all values
+      even without get.
+  - id: c
+    text: List is slower than get.
+    explanation: Speed is not the security issue.
+  - id: d
+    text: List is blocked by admission.
+    explanation: Admission does not block it by default.
+  correct_option: b
+  explanation: A role with list or watch on Secrets exposes all values even without
+    get.
+- id: ats042-020-q10
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Read the kube-controller-manager flags that affect security
+    from its static pod.
+  source_readings:
+  - sections/section-020/module-01/course-01-securing-reconciliation-components.md
+  prompt: Which kube-controller-manager setting reduces the damage of a leaked service
+    account signing key?
+  options:
+  - id: a
+    text: "`--service-account-private-key-file` stored with owner-only permissions
+      on the control plane node, with the key never copied to workloads."
+    explanation: Correct. This key signs service account tokens, and anyone who holds
+      it can create valid tokens.
+  - id: b
+    text: "`--profiling=true`."
+    explanation: Profiling exposes debug endpoints and does not protect the key.
+  - id: c
+    text: "`--bind-address=0.0.0.0`."
+    explanation: Binding to all addresses widens exposure.
+  - id: d
+    text: "`--leader-elect=false`."
+    explanation: This does not protect the key.
+  correct_option: a
+  explanation: This key signs service account tokens, and anyone who holds it can
+    create valid tokens.

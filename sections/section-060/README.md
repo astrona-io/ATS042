@@ -5,13 +5,18 @@ exam_objectives:
 ---
 # KubeProxy
 
-This section teaches kubeproxy and service forwarding. These ideas help you explain system behavior and choose a suitable approach in a KCSA scenario.
+Kube-proxy runs on every node and turns Services and EndpointSlices into packet rules. The objects that define those rules, and the settings of kube-proxy itself, decide who can send traffic to which pods and who can redirect it.
 
-You will work through KubeProxy And Service Forwarding. Each module introduces its goals, teaches the concepts through examples, and closes with a summary. Reusable YAML checkpoints review related objectives after selected section summaries. The course assessment index records their placement and coverage.
+## Learning outcomes
 
-## Learning Outcomes
+- Explain what kube-proxy reads, what it changes on the node and why traffic keeps flowing when it stops.
+- Describe the credentials and host access of the kube-proxy DaemonSet.
+- Compare the Service types and the traffic policies that change exposure.
+- Explain why externalIPs and write access to EndpointSlices let a user capture traffic.
+- Write an admission policy that rejects risky Service fields.
+- Read the kube-proxy configuration and name the settings that matter for security.
+- Diagnose a Service that does not answer, from selector to node rules.
 
-- Explain kube-proxy's Service forwarding responsibility.
-- Distinguish forwarding from authentication and encryption.
-- Identify risks from compromised forwarding configuration.
-- Relate alternative implementations to the same security contract.
+## What is in this section
+
+The section has one module, KubeProxy And Service Forwarding. It has 3 reading parts, a summary and a playground: a cluster to inspect kube-proxy, its configuration and Service rights, and to test an admission policy for Services. A graded lab follows the reading part it practises. A capstone lab closes the section with a new scenario, and a knowledge check of ten questions follows the capstone.

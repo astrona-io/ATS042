@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snapshotter
+  namespace: archive
+  labels:
+    app: snapshotter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snapshotter
+  template:
+    metadata:
+      labels:
+        app: snapshotter
+    spec:
+      serviceAccountName: snapshotter
+      containers:
+        - name: snapshotter
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          env:
+            - name: BACKUP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: snapshot-credentials
+                  key: password
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

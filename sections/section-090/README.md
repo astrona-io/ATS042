@@ -3,15 +3,21 @@ draft: true
 exam_objectives:
   - Container Networking
 ---
-# Container Networking
+# Container Network Trust
 
-This section teaches container network trust. These ideas help you explain system behavior and choose a suitable approach in a KCSA scenario.
+The default Kubernetes network lets every pod reach every other pod. NetworkPolicy changes that, but only when the network plugin enforces it and only for the traffic it describes.
 
-You will work through Container Network Trust. Each module introduces its goals, teaches the concepts through examples, and closes with a summary. Reusable YAML checkpoints review related objectives after selected section summaries. The course assessment index records their placement and coverage.
+## Learning outcomes
 
-## Learning Outcomes
+- State the rules of the Kubernetes network model.
+- Explain what a CNI plugin does and why policy needs a plugin that enforces it.
+- Show that the default cluster network allows traffic between namespaces.
+- Write a default deny policy and an allowance with a precise source and port.
+- Explain how policies combine and why source and destination must both allow a connection.
+- Distinguish one peer with two selectors from two peers.
+- Write an egress policy that keeps DNS working.
+- List traffic that NetworkPolicy does not control.
 
-- Identify the network implementation's authority and dependencies.
-- Distinguish Service forwarding from connection policy enforcement.
-- Relate node access, plaintext traffic and trusted peers.
-- Explain how network segmentation limits compromise paths.
+## What is in this section
+
+The section has one module, Container Network Trust. It has 3 reading parts, a summary and a playground: a Calico cluster to send real requests between pods and test NetworkPolicy. A graded lab follows the reading part it practises. A capstone lab closes the section with a new scenario, and a knowledge check of ten questions follows the capstone.

@@ -1,0 +1,250 @@
+# Knowledge check for section 040. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-040
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-040
+  title: Kubelet
+questions:
+- id: ats042-040-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Describe what the kubelet does and which ports it serves.
+  source_readings:
+  - sections/section-040/module-01/course-01-protecting-the-node-agent.md
+  prompt: What does the kubelet do on a node?
+  options:
+  - id: a
+    text: It schedules pods onto nodes.
+    explanation: The scheduler does that.
+  - id: b
+    text: It starts the pods that are assigned to its node through the container runtime,
+      reports their status and serves a node API.
+    explanation: Correct. This is the node agent role.
+  - id: c
+    text: It stores cluster state.
+    explanation: etcd stores state.
+  - id: d
+    text: It forwards Service traffic.
+    explanation: kube-proxy or the network plugin does that.
+  correct_option: b
+  explanation: This is the node agent role.
+- id: ats042-040-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Read the kubelet configuration fields for authentication, authorization
+    and the read-only port.
+  source_readings:
+  - sections/section-040/module-01/course-01-protecting-the-node-agent.md
+  prompt: Which kubelet setting turns off unauthenticated requests to its API?
+  options:
+  - id: a
+    text: "`authentication.anonymous.enabled: false`."
+    explanation: Correct. This rejects requests with no credentials.
+  - id: b
+    text: "`readOnlyPort: 10255`."
+    explanation: This opens an unauthenticated port.
+  - id: c
+    text: "`authorization.mode: AlwaysAllow`."
+    explanation: This approves every authenticated request.
+  - id: d
+    text: "`rotateCertificates: false`."
+    explanation: This does not concern anonymous access.
+  correct_option: a
+  explanation: This rejects requests with no credentials.
+- id: ats042-040-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain how Webhook authorization maps kubelet paths to node
+    subresources.
+  source_readings:
+  - sections/section-040/module-01/course-02-kubelet-api-authentication-and-authorization.md
+  prompt: With Webhook authorization on the kubelet, how is a request to `/metrics`
+    authorized?
+  options:
+  - id: a
+    text: The kubelet allows it because the caller is authenticated.
+    explanation: Authentication does not authorize.
+  - id: b
+    text: The kubelet sends a SubjectAccessReview to the API server for the subresource
+      `nodes/metrics`, and RBAC decides.
+    explanation: Correct. The path maps to a node subresource.
+  - id: c
+    text: The kubelet checks a local password file.
+    explanation: There is no such file.
+  - id: d
+    text: The scheduler decides.
+    explanation: The scheduler is not involved.
+  correct_option: b
+  explanation: The path maps to a node subresource.
+- id: ats042-040-q04
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why nodes/proxy and pods/exec are powerful rights and
+    scope them.
+  source_readings:
+  - sections/section-040/module-01/course-02-kubelet-api-authentication-and-authorization.md
+  prompt: Why is `get` on `nodes/proxy` more powerful than it looks?
+  options:
+  - id: a
+    text: It only reads node names.
+    explanation: That is `nodes`.
+  - id: b
+    text: It lets the caller send requests to the kubelet API through the API server,
+      including paths that run commands in containers.
+    explanation: Correct. Proxying forwards any kubelet path.
+  - id: c
+    text: It only reads node labels.
+    explanation: Labels need `nodes`.
+  - id: d
+    text: It lets the caller delete nodes.
+    explanation: Deletion needs `delete` on `nodes`.
+  correct_option: b
+  explanation: Proxying forwards any kubelet path.
+- id: ats042-040-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain why nodes/proxy and pods/exec are powerful rights and
+    scope them.
+  source_readings:
+  - sections/section-040/module-01/course-02-kubelet-api-authentication-and-authorization.md
+  prompt: A monitoring agent needs node metrics. Which grant is best?
+  options:
+  - id: a
+    text: "`*` on `nodes/*`."
+    explanation: This includes proxy.
+  - id: b
+    text: "`get` on `nodes/metrics` and `nodes/stats`, and `get` and `list` on `nodes`."
+    explanation: Correct. Only the needed subresources.
+  - id: c
+    text: "`cluster-admin`."
+    explanation: Far too broad.
+  - id: d
+    text: "`get` on `nodes/proxy`."
+    explanation: This is the broad path.
+  correct_option: b
+  explanation: Only the needed subresources.
+- id: ats042-040-q06
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain the Node authorizer, NodeRestriction and node client
+    certificates.
+  source_readings:
+  - sections/section-040/module-01/course-03-node-identity-certificates-and-host-access.md
+  prompt: What does the Node authorizer do?
+  options:
+  - id: a
+    text: It lets every node read every Secret.
+    explanation: It limits access.
+  - id: b
+    text: It lets a node read the Secrets, ConfigMaps and volume claims that its own
+      bound pods reference, and the node objects it needs.
+    explanation: Correct. Access follows the pods on the node.
+  - id: c
+    text: It signs certificates.
+    explanation: The controller manager signs them.
+  - id: d
+    text: It schedules pods.
+    explanation: It does not.
+  correct_option: b
+  explanation: Access follows the pods on the node.
+- id: ats042-040-q07
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain the Node authorizer, NodeRestriction and node client
+    certificates.
+  source_readings:
+  - sections/section-040/module-01/course-03-node-identity-certificates-and-host-access.md
+  prompt: What is the user name format of a node client certificate?
+  options:
+  - id: a
+    text: "`system:node:<node-name>` in the group `system:nodes`."
+    explanation: Correct. This is the format the Node authorizer expects.
+  - id: b
+    text: "`kubelet-<node-name>`."
+    explanation: Not the format.
+  - id: c
+    text: "`admin`."
+    explanation: Not a node identity.
+  - id: d
+    text: "`system:anonymous`."
+    explanation: Not a node identity.
+  correct_option: a
+  explanation: This is the format the Node authorizer expects.
+- id: ats042-040-q08
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Describe certificate signing requests, who may approve them
+    and why approval must be limited.
+  source_readings:
+  - sections/section-040/module-01/course-03-node-identity-certificates-and-host-access.md
+  prompt: Why must approval of certificate signing requests be limited?
+  options:
+  - id: a
+    text: Approval is slow.
+    explanation: Speed is not the issue.
+  - id: b
+    text: An approved request becomes a signed certificate, so anyone who can approve
+      can obtain an identity that the cluster trusts.
+    explanation: Correct. Approval grants identity.
+  - id: c
+    text: Approval deletes nodes.
+    explanation: It does not.
+  - id: d
+    text: Approval encrypts etcd.
+    explanation: It does not.
+  correct_option: b
+  explanation: Approval grants identity.
+- id: ats042-040-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Describe certificate signing requests, who may approve them
+    and why approval must be limited.
+  source_readings:
+  - sections/section-040/module-01/course-03-node-identity-certificates-and-host-access.md
+  prompt: Which RBAC rights are needed to approve a request for a signer?
+  options:
+  - id: a
+    text: "`update` on `certificatesigningrequests/approval` and `approve` on `signers`."
+    explanation: Correct. Both are required.
+  - id: b
+    text: "`get` on `secrets`."
+    explanation: Unrelated.
+  - id: c
+    text: "`create` on `pods/exec`."
+    explanation: Unrelated.
+  - id: d
+    text: "`list` on `nodes`."
+    explanation: Unrelated.
+  correct_option: a
+  explanation: Both are required.
+- id: ats042-040-q10
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain why host mounts of kubelet data and host access defeat
+    pod isolation.
+  source_readings:
+  - sections/section-040/module-01/course-03-node-identity-certificates-and-host-access.md
+  prompt: A pod mounts `/var/lib/kubelet` from the host. What can it read?
+  options:
+  - id: a
+    text: Nothing, because pods are isolated.
+    explanation: A hostPath removes the file isolation.
+  - id: b
+    text: The data of the pods on that node, including volumes and projected service
+      account tokens, subject to file permissions.
+    explanation: Correct. The kubelet stores pod data there.
+  - id: c
+    text: Only its own files.
+    explanation: The mount is the whole directory.
+  - id: d
+    text: Only etcd data.
+    explanation: etcd is elsewhere.
+  correct_option: b
+  explanation: The kubelet stores pod data there.

@@ -1,0 +1,252 @@
+# Knowledge check for section 050. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-050
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-050
+  title: Container Runtime
+questions:
+- id: ats042-050-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Describe the layers between a pod and a running process.
+  source_readings:
+  - sections/section-050/module-01/course-01-runtime-interfaces-and-host-authority.md
+  prompt: Which component implements the Container Runtime Interface that the kubelet
+    calls?
+  options:
+  - id: a
+    text: The kube-apiserver.
+    explanation: The API server never calls the runtime.
+  - id: b
+    text: A high-level runtime such as containerd or CRI-O.
+    explanation: Correct. It serves the image and runtime services of the interface.
+  - id: c
+    text: The scheduler.
+    explanation: The scheduler chooses nodes and does not manage containers.
+  - id: d
+    text: The etcd database.
+    explanation: etcd stores cluster state.
+  correct_option: b
+  explanation: It serves the image and runtime services of the interface.
+- id: ats042-050-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Describe the layers between a pod and a running process.
+  source_readings:
+  - sections/section-050/module-01/course-01-runtime-interfaces-and-host-authority.md
+  prompt: Which low-level component creates the Linux namespaces and control groups
+    and starts the container process?
+  options:
+  - id: a
+    text: An OCI runtime such as runc.
+    explanation: Correct. It follows the OCI runtime specification and creates the
+      process.
+  - id: b
+    text: The kubelet directly.
+    explanation: The kubelet calls the CRI and does not create processes itself.
+  - id: c
+    text: The Service proxy.
+    explanation: It handles Service traffic.
+  - id: d
+    text: The controller manager.
+    explanation: It runs controllers for API objects.
+  correct_option: a
+  explanation: It follows the OCI runtime specification and creates the process.
+- id: ats042-050-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain why the runtime socket gives host authority.
+  source_readings:
+  - sections/section-050/module-01/course-01-runtime-interfaces-and-host-authority.md
+  prompt: A pod mounts the container runtime socket of the node. Why is Kubernetes
+    RBAC unable to limit what the process does with it?
+  options:
+  - id: a
+    text: RBAC only applies to namespaced objects.
+    explanation: RBAC also covers cluster-scoped objects, but it applies to API requests
+      only.
+  - id: b
+    text: Calls through the socket go straight to the runtime and never reach the
+      API server.
+    explanation: Correct. The runtime does not ask the API server for permission.
+  - id: c
+    text: The socket is encrypted.
+    explanation: Encryption is not the reason.
+  - id: d
+    text: The kubelet disables RBAC on nodes with a socket.
+    explanation: The kubelet has no such behaviour.
+  correct_option: b
+  explanation: The runtime does not ask the API server for permission.
+- id: ats042-050-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Read the runtime and container identifiers that the Kubernetes
+    API shows.
+  source_readings:
+  - sections/section-050/module-01/course-01-runtime-interfaces-and-host-authority.md
+  prompt: Which field of the Kubernetes API shows the runtime that a node uses?
+  options:
+  - id: a
+    text: "`status.nodeInfo.containerRuntimeVersion` of the Node."
+    explanation: Correct. The node reports the runtime name and version there.
+  - id: b
+    text: "`spec.taints` of the Node."
+    explanation: Taints control scheduling.
+  - id: c
+    text: "`metadata.annotations` of the Namespace."
+    explanation: Namespaces do not describe nodes.
+  - id: d
+    text: "`spec.clusterIP` of a Service."
+    explanation: This is a Service field.
+  correct_option: a
+  explanation: The node reports the runtime name and version there.
+- id: ats042-050-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: List the pod settings that remove isolation.
+  source_readings:
+  - sections/section-050/module-01/course-02-protecting-runtime-access-and-execution-privileges.md
+  prompt: 'A container runs as user ID 1000 with `privileged: true`. What is the correct
+    assessment?'
+  options:
+  - id: a
+    text: It is safe because the user is not root.
+    explanation: Privileged mode grants host devices and capabilities regardless of
+      the user ID.
+  - id: b
+    text: It still has broad host access because privileged mode removes most isolation.
+    explanation: Correct. The user ID does not undo the privileged setting.
+  - id: c
+    text: It is rejected by the kubelet.
+    explanation: The kubelet accepts it unless an admission step rejects it earlier.
+  - id: d
+    text: It can only read its own files.
+    explanation: Privileged containers can reach host devices.
+  correct_option: b
+  explanation: The user ID does not undo the privileged setting.
+- id: ats042-050-q06
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Apply the baseline and restricted Pod Security standards with
+    namespace labels.
+  source_readings:
+  - sections/section-050/module-01/course-02-protecting-runtime-access-and-execution-privileges.md
+  prompt: Which namespace label makes the API server reject pods that violate the
+    baseline standard?
+  options:
+  - id: a
+    text: "`pod-security.kubernetes.io/warn: baseline`."
+    explanation: This only shows a warning to the client.
+  - id: b
+    text: "`pod-security.kubernetes.io/audit: baseline`."
+    explanation: This only adds an audit annotation.
+  - id: c
+    text: "`pod-security.kubernetes.io/enforce: baseline`."
+    explanation: Correct. The enforce mode rejects the pod.
+  - id: d
+    text: "`security.kubernetes.io/mode: baseline`."
+    explanation: This is not a real label.
+  correct_option: c
+  explanation: The enforce mode rejects the pod.
+- id: ats042-050-q07
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Apply the baseline and restricted Pod Security standards with
+    namespace labels.
+  source_readings:
+  - sections/section-050/module-01/course-02-protecting-runtime-access-and-execution-privileges.md
+  prompt: 'An administrator labels a namespace with `enforce: restricted`. A Deployment
+    there runs non-compliant pods. What happens to the running pods?'
+  options:
+  - id: a
+    text: They are deleted immediately.
+    explanation: Enforcement is not applied to running pods.
+  - id: b
+    text: They keep running, and new pods from the Deployment are rejected when the
+      controller creates them.
+    explanation: Correct. The check runs at pod creation and update.
+  - id: c
+    text: They are moved to another namespace.
+    explanation: Pods cannot be moved.
+  - id: d
+    text: They continue and new pods are accepted.
+    explanation: New pods are checked against the level.
+  correct_option: b
+  explanation: The check runs at pod creation and update.
+- id: ats042-050-q08
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Apply the baseline and restricted Pod Security standards with
+    namespace labels.
+  source_readings:
+  - sections/section-050/module-01/course-02-protecting-runtime-access-and-execution-privileges.md
+  prompt: What does the `restricted` standard require that `baseline` does not?
+  options:
+  - id: a
+    text: Running as a non-root user, dropping all capabilities, forbidding privilege
+      escalation and a seccomp profile.
+    explanation: Correct. These are hardening requirements of the strictest standard.
+  - id: b
+    text: Only that images come from a registry.
+    explanation: Image sources are not part of the standards.
+  - id: c
+    text: That every pod has a Service.
+    explanation: Services are unrelated.
+  - id: d
+    text: That the node runs a sandboxed runtime.
+    explanation: Runtimes are not checked.
+  correct_option: a
+  explanation: These are hardening requirements of the strictest standard.
+- id: ats042-050-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain what a RuntimeClass contains and what it does not install.
+  source_readings:
+  - sections/section-050/module-01/course-03-runtime-classes-and-stronger-isolation.md
+  prompt: A RuntimeClass names the handler `runsc`, but the nodes have no such handler.
+    What happens to a pod that uses the class?
+  options:
+  - id: a
+    text: It runs with the default runtime.
+    explanation: The kubelet passes the named handler to the runtime.
+  - id: b
+    text: It stays in ContainerCreating because the sandbox cannot be created.
+    explanation: Correct. A missing handler makes the sandbox creation fail.
+  - id: c
+    text: The API server rejects the RuntimeClass.
+    explanation: The object is only a name.
+  - id: d
+    text: The scheduler installs the handler.
+    explanation: Nothing installs a handler.
+  correct_option: b
+  explanation: A missing handler makes the sandbox creation fail.
+- id: ats042-050-q10
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain what a RuntimeClass contains and what it does not install.
+  source_readings:
+  - sections/section-050/module-01/course-03-runtime-classes-and-stronger-isolation.md
+  prompt: Why does a RuntimeClass declare `overhead.podFixed`?
+  options:
+  - id: a
+    text: To limit the number of pods.
+    explanation: The field does not set pod counts.
+  - id: b
+    text: To account for resources that the runtime itself uses per pod, so scheduling
+      and quotas include them.
+    explanation: Correct. The overhead is added to the pod requests.
+  - id: c
+    text: To choose the node.
+    explanation: Node choice uses scheduling rules.
+  - id: d
+    text: To encrypt the pod.
+    explanation: It has nothing to do with encryption.
+  correct_option: b
+  explanation: The overhead is added to the pod requests.

@@ -1,5 +1,5 @@
 version: 1
-approval: KCSA-LESSON-PLAN.md approved; reading-only correction 2026-10-11
+approval: KCSA-LESSON-PLAN.md approved; reading-only rule overridden by the maintainer 2026-11-03 (labs, playgrounds, capstones, quizzes in scope)
 course:
   id: ATS042
   certification:
@@ -21,10 +21,10 @@ course:
     - Client Security
     - Storage
 defaults:
-  playground: false
-  module_lab: false
-  capstone: false
-  section_quiz: false
+  playground: true
+  module_lab: true
+  capstone: true
+  section_quiz: true
   final_quiz: true
 sections:
 - id: section-010
@@ -40,11 +40,11 @@ sections:
     - Distinguish API audit evidence from application request logs.
     outline:
     - Protecting The Cluster API
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
 - id: section-020
   title: Controller Manager
   curriculum_item: Controller Manager
@@ -58,11 +58,11 @@ sections:
     - Distinguish Kubernetes controller behavior from application data repair.
     outline:
     - Securing Reconciliation Components
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
 - id: section-030
   title: Scheduler
   curriculum_item: Scheduler
@@ -76,11 +76,11 @@ sections:
     - Distinguish placement controls from complete tenant isolation.
     outline:
     - Protecting Placement Decisions
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
 - id: section-040
   title: Kubelet
   curriculum_item: Kubelet
@@ -94,10 +94,10 @@ sections:
     - Relate node credentials and endpoint protection to cluster trust.
     outline:
     - Protecting The Node Agent
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
+  capstone: true
   section_quiz: true
 - id: section-050
   title: Container Runtime
@@ -113,11 +113,11 @@ sections:
     outline:
     - Runtime Interfaces And Host Authority
     - Protecting Runtime Access And Execution Privileges
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
 - id: section-060
   title: KubeProxy
   curriculum_item: KubeProxy
@@ -131,11 +131,11 @@ sections:
     - Relate alternative implementations to the same security contract.
     outline:
     - Protecting The Service Traffic Path
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
 - id: section-070
   title: Pod
   curriculum_item: Pod
@@ -149,11 +149,11 @@ sections:
     - Describe replacement without assuming restored trust.
     outline:
     - Pod-Level Privileges And Application Access
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
 - id: section-080
   title: Etcd
   curriculum_item: Etcd
@@ -167,10 +167,10 @@ sections:
     - Identify sensitive information in datastore snapshots.
     outline:
     - Protecting The Cluster Datastore
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
+  capstone: true
   section_quiz: true
 - id: section-090
   title: Container Networking
@@ -186,11 +186,11 @@ sections:
     outline:
     - Pod Networks And Policy Boundaries
     - Allowed Connections And Enforcement
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
 - id: section-100
   title: Client Security
   curriculum_item: Client Security
@@ -204,11 +204,11 @@ sections:
     - Compare routine client authority with administrative authority.
     outline:
     - Protecting Administrative And Automated Clients
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
-  section_quiz: false
+  capstone: true
+  section_quiz: true
 - id: section-110
   title: Storage
   curriculum_item: Storage
@@ -222,9 +222,9 @@ sections:
     - Identify node and driver trust in mounted storage.
     outline:
     - Storage Permissions Beyond A Claim
-    playground: false
-    module_lab: false
+    playground: true
+    module_lab: true
     diagrams: []
-  capstone: false
+  capstone: true
   section_quiz: true
 assessment_format: YAML question banks, schema version 1; indexed in assessments/index.yaml

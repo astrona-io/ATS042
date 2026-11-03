@@ -5,39 +5,110 @@ exam_objectives:
 ---
 # Protecting The Cluster Datastore
 
-Etcd stores Kubernetes cluster records, including resource configuration and relevant sensitive data. Ordinary clients reach those records through application programming interface (API) server checks. Direct datastore access creates a different path that can bypass the normal resource-level authentication, authorization and admission contract.
+Etcd is the key-value database where Kubernetes keeps every object of the cluster: Pods, Deployments, RoleBindings, ConfigMaps and Secrets. The API server is the only component that should read and write it. Every authentication, authorization and admission check happens in the API server, so a client that reaches etcd directly skips all of them. This part explains how the API server and etcd connect, which settings decide who may talk to etcd, and how a pod can leak the files that open it.
 
-## Restricting Datastore Access
+## What Etcd Holds And Who May Talk To It
 
-Limit the network and identities permitted to reach etcd to the intended control plane components and controlled operators. Protect the credentials and host files used for that connection. An internal address is not sufficient protection if untrusted workloads or broad infrastructure identities can reach it.
+Etcd stores each object under a key that starts with `/registry/`, for example `/registry/secrets/NAMESPACE/NAME`. The value is the serialized object. A Secret in etcd therefore holds its data fields as stored by the API server, in plain form unless encryption at rest is configured.
 
-Transport Layer Security (TLS) protects communication and can authenticate permitted peers when configured correctly. Peer trust and client trust should follow the actual component roles. A valid encrypted connection to a powerful storage interface is still dangerous when granted to an inappropriate caller.
+The API server is the client. It reads with a client certificate and a private key and verifies the etcd server certificate with a certificate authority file. Four flags of the API server name the connection:
 
-The API server's role-based access control (RBAC) decision does not constrain a client that obtains direct datastore authority outside that path. This is why a workload restricted from reading Secret objects should not also receive datastore credentials through host files or diagnostics. Security analysis must include alternate routes to the same data.
+- `--etcd-servers` lists the etcd addresses, normally `https://127.0.0.1:2379` on a control plane node.
+- `--etcd-cafile` names the certificate authority that signed the etcd server certificate.
+- `--etcd-certfile` and `--etcd-keyfile` hold the client certificate and key that the API server presents.
 
-## Sensitive Records And At-Rest Protection
+Other components do not need etcd. The scheduler, the controller manager and the kubelet only talk to the API server. A component outside the control plane that holds the etcd client key can read every Secret and write any object, whatever the RBAC rules say.
 
-Secrets and other records can contain credentials or confidential configuration. Kubernetes encryption-at-rest configuration can protect selected stored resource data according to its supported design. It is separate from network encryption and from the access rules applied by the API server.
+```mermaid
+flowchart TB
+  U["User or workload"] --> A["API server: authentication, authorization, admission"]
+  A -->|"client certificate over TLS"| E["etcd"]
+  X["Anyone with the etcd client key"] -.->|"skips every API check"| E
+  E --> D["Data directory on the control plane node"]
+```
 
-An authorized API reader can receive plaintext even when stored records are encrypted. Encryption keys need protection, rotation and recovery handling. A key exposed alongside the encrypted data weakens the intended confidentiality boundary. A lost key can also prevent legitimate recovery.
+The diagram shows two ways to etcd. The solid one passes the API checks, and the dotted one does not.
 
-Snapshots and backups need the same sensitivity analysis as the live datastore. They may retain old credentials or resource versions after the current cluster rotates them. Backup readers, storage locations and retention policies are therefore security-relevant, not only operational details.
+## The Settings That Protect The Connection
 
-## Availability And Quorum
+Etcd authenticates its callers through TLS. Transport Layer Security (TLS) encrypts the connection, and with client certificate authentication the server also checks who connects. Three groups of etcd flags matter.
 
-Etcd consensus needs a majority of its configured voting members for normal progress. A three-member arrangement normally tolerates one member loss. Placing members across useful failure domains improves resilience, but access and certificate configuration must remain consistent with the trusted membership.
+- `--client-cert-auth=true` requires every client to present a certificate that the `--trusted-ca-file` signed. Without it, anyone who reaches the port can read and write.
+- `--cert-file` and `--key-file` give the server its own identity for client connections.
+- `--peer-client-cert-auth=true` with `--peer-trusted-ca-file`, `--peer-cert-file` and `--peer-key-file` does the same for connections between etcd members.
 
-Replication supports continued operation through selected failures. It can also replicate unwanted changes. A backup supports historical recovery when its state is valid and the restoration procedure works. These are different protections with different evidence.
+The flag `--listen-client-urls` sets where etcd accepts clients. A kubeadm control plane node listens on the loopback address and on the node address. Reaching that port from a workload network is a risk even with certificate authentication, because it exposes a powerful interface to attackers who steal or guess a certificate. Restrict the port with host firewalls or security groups to the API server nodes.
 
-## A Datastore Exposure Scenario
+Kubeadm uses a separate certificate authority for etcd, kept under `/etc/kubernetes/pki/etcd`. A separate authority means that a certificate issued for the cluster, for example a kubelet certificate, is not accepted by etcd.
 
-Suppose an old snapshot is copied into a broadly readable storage location. The live API may still have narrow permissions, but the snapshot creates an independent disclosure route. Investigate what data it contains, who could read it and whether credentials remain valid. Rotating current values may be necessary, while deleting the copy does not undo past disclosure.
+## Read The Etcd Configuration
 
-Recovery also needs to distinguish cluster records from application data. An etcd snapshot does not automatically contain every database or persistent volume used by applications. Restoring control plane configuration can leave application storage requiring its own consistent recovery procedure.
+The playground cluster runs etcd as a static Pod in `kube-system`. A static Pod is defined by a file on the node, and the kubelet shows it in the API as a read-only mirror Pod. The mirror lets you read its settings without a shell on the node.
 
-A secure datastore design protects direct access, encrypted boundaries, backup material and the identities needed for restoration. Each should be scoped and verified independently of ordinary workload permissions.
+<!-- astrona:playground:renew -->
+
+Find the etcd Pod and print its command line:
+
+```sh
+kubectl -n kube-system get pods -l component=etcd
+kubectl -n kube-system get pod -l component=etcd -o jsonpath='{.items[0].spec.containers[0].command}'
+```
+
+Then check the result. The command is a list of flags. Look for `--client-cert-auth`, `--peer-client-cert-auth`, `--listen-client-urls` and `--data-dir`. A kubeadm cluster sets the two certificate flags to `true`. The second command prints the list as one line, so read it from left to right.
+
+Next print the volumes of the Pod to see which node paths it uses:
+
+```sh
+kubectl -n kube-system get pod -l component=etcd -o jsonpath='{range .items[0].spec.volumes[*]}{.name}{" "}{.hostPath.path}{"\n"}{end}'
+```
+
+The output has one line per volume. The two paths are the certificates directory and the data directory. The data directory holds the database files, and the certificates directory holds the keys.
+
+## Node Files That Open Etcd
+
+Two directories on a control plane node need the same protection as the database itself. The data directory `/var/lib/etcd` contains the database, so reading it reveals every Secret. The directory `/etc/kubernetes/pki/etcd` contains the etcd server and client keys, and `/etc/kubernetes/pki` contains the API server's etcd client key. A copy of these keys works from anywhere that reaches the etcd port.
+
+A Pod can reach them through a `hostPath` volume if it runs on a control plane node. Kubernetes does not know that the path is special. The same applies to a Pod that mounts the root directory of the node.
+
+Save this as `etcd-peek.yaml`. The Pod only describes the risk, and the dry run stops it from being created:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-peek
+  namespace: starfleet
+spec:
+  serviceAccountName: shuttle
+  containers:
+    - name: peek
+      image: busybox:1.37.0
+      command: ["sleep", "3600"]
+      volumeMounts:
+        - name: etcd-pki
+          mountPath: /pki
+          readOnly: true
+  volumes:
+    - name: etcd-pki
+      hostPath:
+        path: /etc/kubernetes/pki/etcd
+```
+
+Validate it on the server without storing it:
+
+```sh
+kubectl apply --dry-run=server -f etcd-peek.yaml
+```
+
+Then check the result. The server accepts the Pod, because no admission rule forbids host paths in this namespace. This is the point: the API accepts a request for the etcd keys, and only an admission control, such as a Pod Security Standard of `baseline` or higher or a policy on `hostPath`, rejects it.
+
+## Defences Beyond Etcd Itself
+
+Limit who can create Pods with `hostPath` volumes, using Pod Security Admission or an admission policy. Do not schedule untrusted workloads on control plane nodes, which the default control plane taint already prevents unless a Pod tolerates it. Limit node access to a small administrator group, because anyone with a shell on the node reads the same files.
+
+Keep the etcd port reachable only by the API server nodes. Keep credentials for etcd out of backups of general configuration and out of container images. Rotate the etcd certificates when an administrator who held them leaves.
 
 ## Common pitfalls
 
 > [!WARNING]
-> Direct datastore access can bypass normal API resource checks. Snapshots are sensitive, and an etcd backup does not automatically restore every application's external data.
+> Encryption in transit is not a replacement for access control. A valid etcd client certificate gives full read and write access to every object of the cluster, so keep its key off workload nodes and out of any Pod that the API server will accept.

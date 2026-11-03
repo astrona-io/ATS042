@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Harden A Build Namespace (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-050
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: loader-no-hostpath
+    description: loader has no hostPath volume
+    type: file
+    source: validation/validate-loader-no-hostpath.sh
+    hint: Remove the volume runtime-dir and its volumeMount from the pod template
+      of loader.
+  - name: builder-unprivileged
+    description: builder is not privileged and uses no host namespace
+    type: file
+    source: validation/validate-builder-unprivileged.sh
+    hint: Remove privileged from the container and remove hostPID from the pod template.
+  - name: dock-enforces-restricted
+    description: dock enforces the restricted standard
+    type: file
+    source: validation/validate-dock-enforces-restricted.sh
+    hint: Label the namespace dock with pod-security.kubernetes.io/enforce=restricted,
+      after the workloads comply.
+  - name: workloads-comply-and-run
+    description: all three Deployments are ready and set restricted-compatible security
+      contexts
+    type: file
+    source: validation/validate-workloads-comply-and-run.sh
+    hint: Each pod template needs runAsNonRoot, a seccomp profile of RuntimeDefault,
+      allowPrivilegeEscalation false and capabilities.drop ["ALL"].
+  - name: isolated-runtimeclass
+    description: RuntimeClass isolated has the handler, selector and overhead
+    type: file
+    source: validation/validate-isolated-runtimeclass.sh
+    hint: Create the RuntimeClass with handler kata, scheduling.nodeSelector isolation=strong
+      and overhead.podFixed memory 128Mi.
+teardown:
+  keepCluster: false

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auditor
+  namespace: depot
+  labels:
+    app: auditor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auditor
+  template:
+    metadata:
+      labels:
+        app: auditor
+    spec:
+      serviceAccountName: auditor
+      containers:
+        - name: auditor
+          image: busybox:1.37.0
+          command: ["sh", "-c", "while true; do cat /data/log.txt > /dev/null 2>&1; sleep 10; done"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: manifest
+            readOnly: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scanner
+  namespace: depot
+  labels:
+    app: scanner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scanner
+  template:
+    metadata:
+      labels:
+        app: scanner
+    spec:
+      serviceAccountName: scanner
+      containers:
+        - name: scanner
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

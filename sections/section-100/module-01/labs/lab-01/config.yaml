@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Issue And Narrow Client Credentials (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-100-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: csr-decisions
+    description: ensign is approved and signed, intruder is denied
+    type: file
+    source: validation/validate-csr-decisions.sh
+    hint: Read the subject of each request. Approve the user request and deny the
+      request for system:masters.
+  - name: ensign-pod-reader
+    description: ensign reads pods in dock and nothing else
+    type: file
+    source: validation/validate-ensign-pod-reader.sh
+    hint: Create a Role with get, list and watch on pods in dock and bind it to the
+      user ensign.
+  - name: courier-narrowed
+    description: courier has no legacy token and only reads pods in dock
+    type: file
+    source: validation/validate-courier-narrowed.sh
+    hint: Delete the Secret courier-token and the ClusterRoleBinding courier-admin,
+      and bind a Role for pods in dock.
+  - name: kubeconfig-secret
+    description: the kubeconfig is a Secret that verifies the server
+    type: file
+    source: validation/validate-kubeconfig-secret.sh
+    hint: Create the Secret deploy-kubeconfig with the key config, embed the authority
+      from kube-root-ca.crt, use tokenFile and delete the ConfigMap.
+teardown:
+  keepCluster: false

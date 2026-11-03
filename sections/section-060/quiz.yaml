@@ -1,0 +1,256 @@
+# Knowledge check for section 060. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-060
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-060
+  title: KubeProxy
+questions:
+- id: ats042-060-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain what kube-proxy reads, what it changes on the node and
+    why traffic keeps flowing when it stops.
+  source_readings:
+  - sections/section-060/module-01/course-01-protecting-the-service-traffic-path.md
+  prompt: What does kube-proxy read from the cluster to build its rules?
+  options:
+  - id: a
+    text: Secrets and ConfigMaps of every namespace.
+    explanation: It does not read them.
+  - id: b
+    text: Services and EndpointSlices.
+    explanation: Correct. These describe the addresses and the ready backends.
+  - id: c
+    text: Only Nodes.
+    explanation: Nodes are not enough to build Service rules.
+  - id: d
+    text: Pod logs.
+    explanation: Logs are not used.
+  correct_option: b
+  explanation: These describe the addresses and the ready backends.
+- id: ats042-060-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain what kube-proxy reads, what it changes on the node and
+    why traffic keeps flowing when it stops.
+  source_readings:
+  - sections/section-060/module-01/course-01-protecting-the-service-traffic-path.md
+  prompt: Kube-proxy stops on one node. What happens to a client pod on that node
+    that calls a Service?
+  options:
+  - id: a
+    text: Every Service call fails at once.
+    explanation: The kernel rules stay in place.
+  - id: b
+    text: Existing rules keep forwarding, but changes to Services and endpoints are
+      not applied on that node.
+    explanation: Correct. The rules are executed by the kernel and are not removed.
+  - id: c
+    text: The pod is evicted.
+    explanation: Kube-proxy has no such role.
+  - id: d
+    text: The Service address changes.
+    explanation: The address is held by the API server.
+  correct_option: b
+  explanation: The rules are executed by the kernel and are not removed.
+- id: ats042-060-q03
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Describe the credentials and host access of the kube-proxy DaemonSet.
+  source_readings:
+  - sections/section-060/module-01/course-01-protecting-the-service-traffic-path.md
+  prompt: Why is control of the kube-proxy DaemonSet a serious risk even though the
+    node-proxier role is narrow?
+  options:
+  - id: a
+    text: The role allows reading Secrets.
+    explanation: The role does not list Secrets.
+  - id: b
+    text: It deletes nodes.
+    explanation: The role does not allow that.
+  - id: c
+    text: The pods run privileged with host networking, so changing the DaemonSet
+      runs code as root on every node.
+    explanation: Correct. The host access of the pod is the larger exposure.
+  - id: d
+    text: It changes the Service CIDR.
+    explanation: The range is an API server setting.
+  correct_option: c
+  explanation: The host access of the pod is the larger exposure.
+- id: ats042-060-q04
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain why externalIPs and write access to EndpointSlices let
+    a user capture traffic.
+  source_readings:
+  - sections/section-060/module-01/course-02-service-exposure-and-endpoint-trust.md
+  prompt: What is the main danger of the Service field `externalIPs`?
+  options:
+  - id: a
+    text: It slows down DNS.
+    explanation: DNS is not involved.
+  - id: b
+    text: Kubernetes does not verify the addresses, so a user can capture traffic
+      that other pods send to those addresses.
+    explanation: Correct. Kube-proxy installs rules for the listed addresses on every
+      node.
+  - id: c
+    text: It deletes the Service selector.
+    explanation: The selector is unaffected.
+  - id: d
+    text: It disables readiness checks.
+    explanation: Readiness is unrelated.
+  correct_option: b
+  explanation: Kube-proxy installs rules for the listed addresses on every node.
+- id: ats042-060-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Compare the Service types and the traffic policies that change
+    exposure.
+  source_readings:
+  - sections/section-060/module-01/course-02-service-exposure-and-endpoint-trust.md
+  prompt: Which setting makes a node forward external traffic only to pods on the
+    same node and keep the client address?
+  options:
+  - id: a
+    text: "`externalTrafficPolicy: Local`."
+    explanation: Correct. Local limits endpoints to the receiving node and avoids
+      the source address rewrite.
+  - id: b
+    text: "`sessionAffinity: None`."
+    explanation: This controls stickiness.
+  - id: c
+    text: "`type: ExternalName`."
+    explanation: This returns a DNS name.
+  - id: d
+    text: "`clusterIP: None`."
+    explanation: This makes the Service headless.
+  correct_option: a
+  explanation: Local limits endpoints to the receiving node and avoids the source
+    address rewrite.
+- id: ats042-060-q06
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why externalIPs and write access to EndpointSlices let
+    a user capture traffic.
+  source_readings:
+  - sections/section-060/module-01/course-02-service-exposure-and-endpoint-trust.md
+  prompt: A user holds `update` on `endpointslices` for a namespace. What can the
+    user do?
+  options:
+  - id: a
+    text: Only read Service names.
+    explanation: Update is a write verb.
+  - id: b
+    text: Delete the namespace.
+    explanation: That needs another right.
+  - id: c
+    text: Choose the addresses that receive traffic for a Service, including addresses
+      outside the cluster.
+    explanation: Correct. EndpointSlices decide where traffic is sent.
+  - id: d
+    text: Change the pod labels.
+    explanation: That needs a right on pods.
+  correct_option: c
+  explanation: EndpointSlices decide where traffic is sent.
+- id: ats042-060-q07
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Write an admission policy that rejects risky Service fields.
+  source_readings:
+  - sections/section-060/module-01/course-02-service-exposure-and-endpoint-trust.md
+  prompt: Which control can reject Services that set `externalIPs` in selected namespaces?
+  options:
+  - id: a
+    text: A ResourceQuota.
+    explanation: Quotas count objects and resources.
+  - id: b
+    text: A PodDisruptionBudget.
+    explanation: It limits voluntary disruptions of pods.
+  - id: c
+    text: A PriorityClass.
+    explanation: It orders pods for scheduling.
+  - id: d
+    text: A ValidatingAdmissionPolicy with a binding to those namespaces.
+    explanation: Correct. A CEL expression can test the field and deny the request.
+  correct_option: d
+  explanation: A CEL expression can test the field and deny the request.
+- id: ats042-060-q08
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Read the kube-proxy configuration and name the settings that
+    matter for security.
+  source_readings:
+  - sections/section-060/module-01/course-03-proxy-configuration-health-and-failure.md
+  prompt: In a kubeadm-based cluster, where is the kube-proxy configuration file stored?
+  options:
+  - id: a
+    text: In a Secret in the default namespace.
+    explanation: It is not stored there.
+  - id: b
+    text: In the ConfigMap `kube-proxy` in the namespace `kube-system`, under the
+      key `config.conf`.
+    explanation: Correct. The DaemonSet mounts this ConfigMap.
+  - id: c
+    text: In the etcd data directory.
+    explanation: etcd holds objects only.
+  - id: d
+    text: In the node label `proxy.config`.
+    explanation: There is no such label.
+  correct_option: b
+  explanation: The DaemonSet mounts this ConfigMap.
+- id: ats042-060-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Read the kube-proxy configuration and name the settings that
+    matter for security.
+  source_readings:
+  - sections/section-060/module-01/course-03-proxy-configuration-health-and-failure.md
+  prompt: Why should `metricsBindAddress` stay on the loopback address?
+  options:
+  - id: a
+    text: Metrics are encrypted only on loopback.
+    explanation: The endpoint serves plain HTTP either way.
+  - id: b
+    text: A wider bind lets any machine that reaches the node read internal counters
+      about the Services of the node.
+    explanation: Correct. Reachability should match need.
+  - id: c
+    text: Loopback makes forwarding faster.
+    explanation: Speed is not the reason.
+  - id: d
+    text: Kube-proxy fails to start otherwise.
+    explanation: It starts with other addresses.
+  correct_option: b
+  explanation: Reachability should match need.
+- id: ats042-060-q10
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Diagnose a Service that does not answer, from selector to node
+    rules.
+  source_readings:
+  - sections/section-060/module-01/course-03-proxy-configuration-health-and-failure.md
+  prompt: A Service has no traffic. What is the first check in a sensible diagnosis?
+  options:
+  - id: a
+    text: Reinstall kube-proxy.
+    explanation: This skips the likely causes.
+  - id: b
+    text: Read the EndpointSlice of the Service to see whether any ready pod matches
+      the selector.
+    explanation: Correct. An empty slice explains most failures.
+  - id: c
+    text: Reboot the node.
+    explanation: This is disruptive and unspecific.
+  - id: d
+    text: Delete the Service.
+    explanation: This removes evidence.
+  correct_option: b
+  explanation: An empty slice explains most failures.

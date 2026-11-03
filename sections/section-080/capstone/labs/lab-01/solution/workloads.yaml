@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exporter
+  namespace: vault
+  labels:
+    app: exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exporter
+  template:
+    metadata:
+      labels:
+        app: exporter
+    spec:
+      serviceAccountName: exporter
+      containers:
+        - name: exporter
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          env:
+            - name: ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-target-credentials
+                  key: access-key
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restore
+  namespace: vault
+  labels:
+    app: restore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: restore
+  template:
+    metadata:
+      labels:
+        app: restore
+    spec:
+      serviceAccountName: restore
+      containers:
+        - name: restore
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

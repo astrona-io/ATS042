@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Restore Scheduling And Close Placement Bypasses (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-030
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+    nodes:
+      workers: 2
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: cargo-scheduled
+    description: The Deployment cargo runs two ready replicas
+    type: file
+    source: validation/validate-cargo-scheduled.sh
+    hint: Read the FailedScheduling event of a cargo pod and lower the CPU request
+      to a value a node can satisfy.
+  - name: relay-spread
+    description: The relay replicas run on different nodes and the spread is required
+    type: file
+    source: validation/validate-relay-spread.sh
+    hint: Add a topologySpreadConstraint with topologyKey kubernetes.io/hostname,
+      maxSkew 1 and whenUnsatisfiable DoNotSchedule.
+  - name: urgent-class-limited
+    description: New pods cannot use the urgent priority class in armada
+    type: file
+    source: validation/validate-urgent-class-limited.sh
+    hint: Create a ResourceQuota in armada with a scopeSelector on PriorityClass In
+      [urgent] and hard pods set to 0.
+  - name: ops-cannot-bind-or-edit-nodes
+    description: armada-ops cannot create bindings or change nodes
+    type: file
+    source: validation/validate-ops-cannot-bind-or-edit-nodes.sh
+    hint: Remove the pods/binding and nodes rules from the ClusterRole placement-helper
+      and keep read access to pods.
+teardown:
+  keepCluster: false

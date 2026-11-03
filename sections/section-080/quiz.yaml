@@ -1,0 +1,248 @@
+# Knowledge check for section 080. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-080
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-080
+  title: Etcd And Stored Cluster Data
+questions:
+- id: ats042-080-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain why a client of etcd skips the checks of the API server.
+  source_readings:
+  - sections/section-080/module-01/course-01-protecting-the-cluster-datastore.md
+  prompt: Why can a holder of the etcd client key read Secrets that RBAC forbids?
+  options:
+  - id: a
+    text: Etcd forwards the request to the API server.
+    explanation: It does not.
+  - id: b
+    text: Authentication, authorization and admission run in the API server, and a
+      direct etcd client does not pass through it.
+    explanation: Correct. The checks are not in etcd.
+  - id: c
+    text: The key belongs to a cluster-admin user.
+    explanation: The key is a TLS credential for etcd.
+  - id: d
+    text: Secrets in etcd are always plain text and unreadable.
+    explanation: This is not the reason.
+  correct_option: b
+  explanation: The checks are not in etcd.
+- id: ats042-080-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Name the etcd flags that require certificate authentication
+    for clients and peers.
+  source_readings:
+  - sections/section-080/module-01/course-01-protecting-the-cluster-datastore.md
+  prompt: Which etcd flag makes the server reject clients without a valid certificate?
+  options:
+  - id: a
+    text: "--client-cert-auth=true."
+    explanation: Correct. It requires a client certificate signed by the trusted CA.
+  - id: b
+    text: "--listen-client-urls."
+    explanation: This sets the addresses.
+  - id: c
+    text: "--data-dir."
+    explanation: This sets the storage path.
+  - id: d
+    text: "--name."
+    explanation: This names the member.
+  correct_option: a
+  explanation: It requires a client certificate signed by the trusted CA.
+- id: ats042-080-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Identify the node paths that hold the database and the keys.
+  source_readings:
+  - sections/section-080/module-01/course-01-protecting-the-cluster-datastore.md
+  prompt: A Pod mounts /etc/kubernetes/pki/etcd through hostPath and runs on a control
+    plane node. What does the API server do when no admission rule blocks it?
+  options:
+  - id: a
+    text: It rejects the Pod because the path is special.
+    explanation: Kubernetes does not know the path is special.
+  - id: b
+    text: It accepts the Pod, and the container can read the etcd keys.
+    explanation: Correct. Only admission rules block host paths.
+  - id: c
+    text: It encrypts the volume.
+    explanation: It does not.
+  - id: d
+    text: It copies the keys.
+    explanation: It does not.
+  correct_option: b
+  explanation: Only admission rules block host paths.
+- id: ats042-080-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain what encryption at rest protects and what it does not.
+  source_readings:
+  - sections/section-080/module-01/course-02-secrets-and-encryption-at-rest.md
+  prompt: Which sentence about base64 in a Secret is correct?
+  options:
+  - id: a
+    text: It is strong encryption.
+    explanation: Base64 is an encoding.
+  - id: b
+    text: It protects against readers of the API.
+    explanation: Any reader can decode it.
+  - id: c
+    text: It is an encoding that anyone can reverse.
+    explanation: Correct. It makes bytes into text.
+  - id: d
+    text: It is added by encryption at rest.
+    explanation: It is independent of encryption at rest.
+  correct_option: c
+  explanation: It makes bytes into text.
+- id: ats042-080-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Describe how to enable and rotate keys for encryption at rest
+    in the right order.
+  source_readings:
+  - sections/section-080/module-01/course-02-secrets-and-encryption-at-rest.md
+  prompt: Encryption at rest is configured with aescbc first and identity second.
+    What happens to a Secret written before the change?
+  options:
+  - id: a
+    text: It is encrypted immediately.
+    explanation: Existing objects are not rewritten.
+  - id: b
+    text: It is deleted.
+    explanation: It stays readable through identity.
+  - id: c
+    text: It stays in plain form until it is written again, and the identity provider
+      lets the server read it.
+    explanation: Correct. New writes only are encrypted.
+  - id: d
+    text: It becomes unreadable.
+    explanation: Identity decodes it.
+  correct_option: c
+  explanation: New writes only are encrypted.
+- id: ats042-080-q06
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Describe how to enable and rotate keys for encryption at rest
+    in the right order.
+  source_readings:
+  - sections/section-080/module-01/course-02-secrets-and-encryption-at-rest.md
+  prompt: What is the correct order for rotating an encryption key?
+  options:
+  - id: a
+    text: Remove the old key, add the new key, restart.
+    explanation: Objects become unreadable.
+  - id: b
+    text: Add the new key first, restart the API servers, rewrite the objects, then
+      remove the old key.
+    explanation: Correct. All servers can decrypt before the old key is removed.
+  - id: c
+    text: Rewrite the objects, then add the key.
+    explanation: Objects need the key first.
+  - id: d
+    text: Restart etcd and nothing else.
+    explanation: This does not rotate the key.
+  correct_option: b
+  explanation: All servers can decrypt before the old key is removed.
+- id: ats042-080-q07
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain which RBAC rights return Secret contents and how to
+    narrow them.
+  source_readings:
+  - sections/section-080/module-01/course-02-secrets-and-encryption-at-rest.md
+  prompt: Which RBAC rule discloses every Secret in a namespace in one call?
+  options:
+  - id: a
+    text: create on secrets.
+    explanation: This writes.
+  - id: b
+    text: get on a Secret named in resourceNames.
+    explanation: This reads one object.
+  - id: c
+    text: list on secrets.
+    explanation: Correct. List returns the contents of all Secrets in scope.
+  - id: d
+    text: get on configmaps.
+    explanation: This reads ConfigMaps.
+  correct_option: c
+  explanation: List returns the contents of all Secrets in scope.
+- id: ats042-080-q08
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Calculate quorum and explain why replication is not a backup.
+  source_readings:
+  - sections/section-080/module-01/course-03-snapshots-quorum-and-recovery.md
+  prompt: An etcd cluster has four members. How many can fail before writes stop?
+  options:
+  - id: a
+    text: Zero.
+    explanation: One failure is tolerated.
+  - id: b
+    text: Two.
+    explanation: Quorum of four is three.
+  - id: c
+    text: Four.
+    explanation: All cannot fail.
+  - id: d
+    text: One, which is the same as for three members.
+    explanation: Correct. Quorum is three of four, so an even count adds no tolerance.
+  correct_option: d
+  explanation: Quorum is three of four, so an even count adds no tolerance.
+- id: ats042-080-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Calculate quorum and explain why replication is not a backup.
+  source_readings:
+  - sections/section-080/module-01/course-03-snapshots-quorum-and-recovery.md
+  prompt: An administrator deletes a Namespace by mistake. Why does the three-member
+    etcd cluster not protect the data?
+  options:
+  - id: a
+    text: The members refuse writes.
+    explanation: They accept them.
+  - id: b
+    text: The members are in the same zone.
+    explanation: This is not the issue.
+  - id: c
+    text: Replication copies the deletion to every member, so only a backup restores
+      it.
+    explanation: Correct. A wrong write is replicated.
+  - id: d
+    text: Quorum is lost.
+    explanation: The cluster is healthy.
+  correct_option: c
+  explanation: A wrong write is replicated.
+- id: ats042-080-q10
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Describe what a snapshot contains and what a restore does not
+    bring back.
+  source_readings:
+  - sections/section-080/module-01/course-03-snapshots-quorum-and-recovery.md
+  prompt: A snapshot of etcd was copied to a shared drive and later deleted. What
+    must the team do next?
+  options:
+  - id: a
+    text: Nothing, because the file is deleted.
+    explanation: Deleting does not undo disclosure.
+  - id: b
+    text: Rotate the credentials the snapshot contained and review who could read
+      the drive.
+    explanation: Correct. Disclosure may have happened.
+  - id: c
+    text: Restart etcd.
+    explanation: This changes nothing.
+  - id: d
+    text: Increase the member count.
+    explanation: This is unrelated.
+  correct_option: b
+  explanation: Disclosure may have happened.

@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Close Anonymous Access And Add Admission Policy (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-010-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - ghcr.io/stefanprodan/podinfo:6.15.0
+    - mccutchen/go-httpbin:2.25.0
+    - curlimages/curl:8.22.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: anonymous-access-removed
+    description: Unauthenticated callers cannot read pods or secrets
+    type: file
+    source: validation/validate-anonymous-access-removed.sh
+    hint: Find the ClusterRoleBinding whose subject is the group system:unauthenticated
+      and delete it.
+  - name: ci-deployer-can-manage-deployments
+    description: ci-deployer can read, create, update and patch Deployments in starfleet
+    type: file
+    source: validation/validate-ci-deployer-can-manage-deployments.sh
+    hint: Create a Role in starfleet with apiGroup apps, resource deployments and
+      the verbs get, list, watch, create, update, patch. Bind it with a RoleBinding.
+  - name: ci-deployer-least-privilege
+    description: ci-deployer has no rights beyond Deployments in starfleet
+    type: file
+    source: validation/validate-ci-deployer-least-privilege.sh
+    hint: Remove the ClusterRoleBinding to cluster-admin. Do not bind admin or edit
+      and do not use a wildcard.
+  - name: privileged-pod-rejected
+    description: A privileged pod is rejected in outpost
+    type: file
+    source: validation/validate-privileged-pod-rejected.sh
+    hint: Create a ValidatingAdmissionPolicy for pods and a ValidatingAdmissionPolicyBinding
+      with validationActions Deny that selects the namespace outpost.
+  - name: ordinary-pod-still-accepted
+    description: An ordinary pod is still accepted in outpost
+    type: file
+    source: validation/validate-ordinary-pod-still-accepted.sh
+    hint: The policy must reject only privileged containers. Test it with a normal
+      pod.
+  - name: probe-token-not-mounted
+    description: The probe pods do not mount a service account token
+    type: file
+    source: validation/validate-probe-token-not-mounted.sh
+    hint: Set automountServiceAccountToken to false on the probe ServiceAccount, then
+      restart the Deployment so a new pod is created.
+teardown:
+  keepCluster: false

@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Limit A Custom Controller With RBAC And Ownership (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-020-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: controller-scoped-to-namespace
+    description: fleet-controller reads ConfigMaps in starfleet only
+    type: file
+    source: validation/validate-controller-scoped-to-namespace.sh
+    hint: Delete the ClusterRoleBinding for fleet-controller and bind a Role in starfleet
+      with a RoleBinding.
+  - name: controller-writes-only-fleet-state
+    description: fleet-controller changes only the ConfigMap fleet-state
+    type: file
+    source: validation/validate-controller-writes-only-fleet-state.sh
+    hint: Use a rule with resources configmaps, resourceNames fleet-state and the
+      verbs update and patch.
+  - name: controller-no-secrets
+    description: fleet-controller cannot read Secrets
+    type: file
+    source: validation/validate-controller-no-secrets.sh
+    hint: No rule for the fleet-controller identity may include secrets or a wildcard
+      resource.
+  - name: intern-cannot-escalate
+    description: intern holds neither escalate nor bind and can still read pods
+    type: file
+    source: validation/validate-intern-cannot-escalate.sh
+    hint: Edit the ClusterRole role-manager so it keeps only get and list on pods.
+  - name: fleet-state-owned-by-deployment
+    description: The ConfigMap fleet-state is owned by the Deployment fleet-controller
+    type: file
+    source: validation/validate-fleet-state-owned-by-deployment.sh
+    hint: Add metadata.ownerReferences to the ConfigMap with the apiVersion, kind,
+      name and uid of the Deployment.
+teardown:
+  keepCluster: false

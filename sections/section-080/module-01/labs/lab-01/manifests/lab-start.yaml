@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: archive
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: snapshotter
+  namespace: archive
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: snapshot-settings
+  namespace: archive
+data:
+  schedule: "0 2 * * *"
+  password: s3cr3t-backup-pass
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backup-key
+  namespace: archive
+type: Opaque
+stringData:
+  key: not-a-real-key
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snapshotter
+  namespace: archive
+  labels:
+    app: snapshotter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snapshotter
+  template:
+    metadata:
+      labels:
+        app: snapshotter
+    spec:
+      serviceAccountName: snapshotter
+      containers:
+        - name: snapshotter
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          env:
+            - name: BACKUP_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: snapshot-settings
+                  key: password
+          volumeMounts:
+            - name: host-0
+              mountPath: /host-0
+            - name: host-1
+              mountPath: /host-1
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: host-0
+          hostPath:
+            path: /var/lib/etcd
+        - name: host-1
+          hostPath:
+            path: /etc/kubernetes/pki/etcd
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secret-reader
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: snapshotter-secrets
+subjects:
+  - kind: ServiceAccount
+    name: snapshotter
+    namespace: archive
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: secret-reader
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: authenticated-secrets
+  namespace: archive
+subjects:
+  - kind: Group
+    name: system:authenticated
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: secret-reader

@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: harbor
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dock
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ops-operator
+  namespace: harbor
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: harbor-config
+  namespace: harbor
+data:
+  mode: "standard"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harbor-credentials
+  namespace: harbor
+stringData:
+  password: not-a-real-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dock-credentials
+  namespace: dock
+stringData:
+  password: not-a-real-secret
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ops-operator
+rules:
+  - apiGroups: ["apps"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles", "clusterrolebindings"]
+    verbs: ["get", "list", "create", "update", "escalate", "bind"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ops-operator
+subjects:
+  - kind: ServiceAccount
+    name: ops-operator
+    namespace: harbor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ops-operator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: harbor-web
+  namespace: harbor
+  labels:
+    app: harbor-web
+spec:
+  paused: true
+  replicas: 2
+  selector:
+    matchLabels:
+      app: harbor-web
+  template:
+    metadata:
+      labels:
+        app: harbor-web
+    spec:
+      containers:
+        - name: web
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 8Mi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nightly-backup
+  namespace: harbor
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 20
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: backup
+              image: busybox:1.37.0
+              command: ["sh", "-c", "echo backup"]

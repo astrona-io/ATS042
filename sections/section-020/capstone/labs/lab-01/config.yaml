@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Secure An Operator And Restore Reconciliation (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-020
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: operator-can-do-its-work
+    description: ops-operator manages Deployments and reads ConfigMaps in harbor
+    type: file
+    source: validation/validate-operator-can-do-its-work.sh
+    hint: Create Roles in harbor for deployments (apps group) and configmaps and bind
+      them to the service account.
+  - name: operator-namespace-only
+    description: ops-operator has no rights outside harbor and no extra verbs
+    type: file
+    source: validation/validate-operator-namespace-only.sh
+    hint: Delete the ClusterRoleBinding and use RoleBindings in harbor only. Do not
+      use wildcards.
+  - name: operator-no-secrets-or-escalation
+    description: ops-operator cannot read Secrets or escalate
+    type: file
+    source: validation/validate-operator-no-secrets-or-escalation.sh
+    hint: No rule for this service account may name secrets, escalate or bind.
+  - name: harbor-web-reconciled
+    description: The Deployment harbor-web runs two ready replicas
+    type: file
+    source: validation/validate-harbor-web-reconciled.sh
+    hint: A paused Deployment is not reconciled. Resume it with kubectl rollout resume.
+  - name: backup-jobs-cleaned-up
+    description: The CronJob nightly-backup cleans up finished Jobs
+    type: file
+    source: validation/validate-backup-jobs-cleaned-up.sh
+    hint: Set spec.successfulJobsHistoryLimit to 2 or less and spec.jobTemplate.spec.ttlSecondsAfterFinished
+      to 300 or less.
+teardown:
+  keepCluster: false

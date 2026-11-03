@@ -1,0 +1,282 @@
+# Knowledge check for section 010. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-010
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-010
+  title: API Server
+questions:
+- id: ats042-010-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Name the order of the request path and which check rejects a
+    given request.
+  source_readings:
+  - sections/section-010/module-01/course-01-protecting-the-cluster-api.md
+  prompt: A client sends a request to the API server with a valid client certificate.
+    The certificate user has no matching RBAC rule for the verb and resource. Which
+    step rejects the request?
+  options:
+  - id: a
+    text: Authentication, because the certificate user has no rules.
+    explanation: Authentication succeeded because the certificate is valid and trusted.
+  - id: b
+    text: Authorization, because no rule allows the verb on the resource.
+    explanation: Correct. RBAC is allow-only. With no matching rule the authorizers
+      do not allow the request, and the server answers 403 Forbidden.
+  - id: c
+    text: Admission, because the object is unknown.
+    explanation: Admission runs only after authorization allowed the request.
+  - id: d
+    text: The kubelet, because it enforces the rules.
+    explanation: The kubelet does not decide API permissions.
+  correct_option: b
+  explanation: RBAC is allow-only. With no matching rule the authorizers do not allow
+    the request, and the server answers 403 Forbidden.
+- id: ats042-010-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain the authentication methods the API server supports and
+    what anonymous access means.
+  source_readings:
+  - sections/section-010/module-01/course-01-protecting-the-cluster-api.md
+  prompt: A request has no credentials. The API server flag `--anonymous-auth` is
+    true (the default) and no RBAC rule names `system:unauthenticated` or `system:anonymous`
+    beyond the built-in discovery roles. What happens to a request to list pods?
+  options:
+  - id: a
+    text: It is accepted as the user system:anonymous and then denied by RBAC.
+    explanation: 'Correct. Correct reasoning for the default flags: the request is
+      authenticated as anonymous, so authorization decides, and no rule allows listing
+      pods.'
+  - id: b
+    text: It is rejected by authentication with a 401 before authorization.
+    explanation: With anonymous requests enabled the server does not return 401 at
+      this step.
+  - id: c
+    text: It is allowed because anonymous users have the view role.
+    explanation: No built-in binding gives anonymous users the view role.
+  - id: d
+    text: It is allowed until the first admission webhook runs.
+    explanation: Admission never grants permission.
+  correct_option: a
+  explanation: 'Correct reasoning for the default flags: the request is authenticated
+    as anonymous, so authorization decides, and no rule allows listing pods.'
+- id: ats042-010-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Find and remove bindings that grant rights to system:unauthenticated
+    or to broad groups.
+  source_readings:
+  - sections/section-010/module-01/course-02-authorization-and-least-privilege.md
+  prompt: The group `system:unauthenticated` is bound to the ClusterRole `view` by
+    a ClusterRoleBinding. What is the effect?
+  options:
+  - id: a
+    text: Only requests with a service account token can read objects.
+    explanation: Service account tokens are authenticated identities and are not part
+      of system:unauthenticated.
+  - id: b
+    text: Requests with no credentials can read most objects in every namespace.
+    explanation: Correct. A ClusterRoleBinding applies the role in every namespace
+      to all subjects in the group, and requests with no credentials belong to that
+      group.
+  - id: c
+    text: Nothing, because view does not include any read verbs.
+    explanation: The view role includes get, list and watch on many resources.
+  - id: d
+    text: The binding only works inside the kube-system namespace.
+    explanation: A ClusterRoleBinding is not limited to one namespace.
+  correct_option: b
+  explanation: A ClusterRoleBinding applies the role in every namespace to all subjects
+    in the group, and requests with no credentials belong to that group.
+- id: ats042-010-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Write a Role and a RoleBinding that give a service account only
+    the verbs it needs.
+  source_readings:
+  - sections/section-010/module-01/course-02-authorization-and-least-privilege.md
+  prompt: A pipeline needs to patch Deployments in `starfleet` only. Which design
+    follows least privilege?
+  options:
+  - id: a
+    text: A ClusterRoleBinding to the built-in edit ClusterRole.
+    explanation: edit grants many verbs on many resources in every namespace.
+  - id: b
+    text: A Role in starfleet with get, list, watch, update and patch on deployments
+      in the apps group, and a RoleBinding in starfleet.
+    explanation: Correct. A Role is limited to one namespace, and the rule names the
+      exact resource and verbs.
+  - id: c
+    text: A Role in starfleet with the resource deployments in the core API group.
+    explanation: Deployments belong to the apps group, so a core group rule matches
+      nothing.
+  - id: d
+    text: A ClusterRole with all verbs on deployments bound by a RoleBinding.
+    explanation: A binding to a ClusterRole in one namespace limits where the rules
+      apply, but all verbs is more than the pipeline needs.
+  correct_option: b
+  explanation: A Role is limited to one namespace, and the rule names the exact resource
+    and verbs.
+- id: ats042-010-q05
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain mutating and validating admission and write a ValidatingAdmissionPolicy
+    with a binding.
+  source_readings:
+  - sections/section-010/module-01/course-03-admission-control-and-audit-evidence.md
+  prompt: 'A user can create Deployments but a pod with `privileged: true` is rejected
+    with a message from a ValidatingAdmissionPolicy. What does this show?'
+  options:
+  - id: a
+    text: The user failed authentication.
+    explanation: Authentication succeeded, or the request would not reach admission.
+  - id: b
+    text: RBAC allowed the request and admission rejected the object.
+    explanation: Correct. Authorization allows the verb on the resource. Admission
+      then checks the object content and can still reject it.
+  - id: c
+    text: The kubelet refused to start the container.
+    explanation: The rejection comes from the API server before the object is stored.
+  - id: d
+    text: The scheduler found no node.
+    explanation: Scheduling happens after the object is stored.
+  correct_option: b
+  explanation: Authorization allows the verb on the resource. Admission then checks
+    the object content and can still reject it.
+- id: ats042-010-q06
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain mutating and validating admission and write a ValidatingAdmissionPolicy
+    with a binding.
+  source_readings:
+  - sections/section-010/module-01/course-03-admission-control-and-audit-evidence.md
+  prompt: A ValidatingAdmissionPolicy exists but has no ValidatingAdmissionPolicyBinding.
+    What is the effect?
+  options:
+  - id: a
+    text: It denies matching requests in every namespace.
+    explanation: A policy does not act without a binding.
+  - id: b
+    text: It is inactive, because a binding selects the resources and sets the validation
+      actions.
+    explanation: Correct. The binding supplies the scope and whether to Deny, Warn
+      or Audit.
+  - id: c
+    text: It applies only to the kube-system namespace.
+    explanation: No default namespace scope exists.
+  - id: d
+    text: It runs in warn mode.
+    explanation: No action is taken without a binding.
+  correct_option: b
+  explanation: The binding supplies the scope and whether to Deny, Warn or Audit.
+- id: ats042-010-q07
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain mutating and validating admission and write a ValidatingAdmissionPolicy
+    with a binding.
+  source_readings:
+  - sections/section-010/module-01/course-03-admission-control-and-audit-evidence.md
+  prompt: An admission webhook that enforces a required policy is down and its `failurePolicy`
+    is `Fail`. What happens to matching requests?
+  options:
+  - id: a
+    text: They are accepted without the check.
+    explanation: That behaviour belongs to failurePolicy Ignore.
+  - id: b
+    text: They are rejected, so the cluster is safe but those operations stop.
+    explanation: Correct. Fail means a request the webhook cannot judge is rejected,
+      which protects policy and costs availability.
+  - id: c
+    text: They are queued until the webhook returns.
+    explanation: The API server does not queue admission requests.
+  - id: d
+    text: Only reads are affected.
+    explanation: Webhooks match the operations in their rules, usually create and
+      update.
+  correct_option: b
+  explanation: Fail means a request the webhook cannot judge is rejected, which protects
+    policy and costs availability.
+- id: ats042-010-q08
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain what an audit policy records and why audit data is sensitive.
+  source_readings:
+  - sections/section-010/module-01/course-03-admission-control-and-audit-evidence.md
+  prompt: An audit policy sets `RequestResponse` for Secrets. What is the main risk?
+  options:
+  - id: a
+    text: The API server stops serving Secrets.
+    explanation: Audit level does not change serving.
+  - id: b
+    text: The audit log can contain Secret data and needs the same protection as the
+      Secrets.
+    explanation: Correct. RequestResponse records request and response bodies, which
+      hold the values.
+  - id: c
+    text: Pods restart on every audit write.
+    explanation: Audit logging does not restart pods.
+  - id: d
+    text: Authorization is skipped for Secrets.
+    explanation: Audit records events and does not change decisions.
+  correct_option: b
+  explanation: RequestResponse records request and response bodies, which hold the
+    values.
+- id: ats042-010-q09
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain why TLS verification, narrow network exposure and short-lived
+    credentials are needed together.
+  source_readings:
+  - sections/section-010/module-01/course-01-protecting-the-cluster-api.md
+  prompt: 'A team sets `insecure-skip-tls-verify: true` in a kubeconfig to avoid a
+    certificate error. What does this remove?'
+  options:
+  - id: a
+    text: The need for a credential.
+    explanation: The client still sends its credential.
+  - id: b
+    text: The check that the server is the cluster the client intended to reach.
+    explanation: Correct. Without verification a client can send its credential to
+      any server that answers.
+  - id: c
+    text: Encryption of the connection.
+    explanation: The connection is still encrypted, but to an unverified peer.
+  - id: d
+    text: RBAC checks on the server.
+    explanation: The server still applies RBAC.
+  correct_option: b
+  explanation: Without verification a client can send its credential to any server
+    that answers.
+- id: ats042-010-q10
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Write a Role and a RoleBinding that give a service account only
+    the verbs it needs.
+  source_readings:
+  - sections/section-010/module-01/course-02-authorization-and-least-privilege.md
+  prompt: A service account token is stolen from a pod that never calls the Kubernetes
+    API. Which earlier setting would have prevented the exposure?
+  options:
+  - id: a
+    text: 'automountServiceAccountToken: false on the pod or service account.'
+    explanation: Correct. The token would not have been mounted into the pod.
+  - id: b
+    text: 'readOnlyRootFilesystem: true.'
+    explanation: The token mount is a separate read-only projected volume and is still
+      readable.
+  - id: c
+    text: A larger memory limit.
+    explanation: Resource limits do not change token mounting.
+  - id: d
+    text: 'imagePullPolicy: Always.'
+    explanation: Image pull policy does not affect tokens.
+  correct_option: a
+  explanation: The token would not have been mounted into the pod.

@@ -37,6 +37,57 @@ Suppose an exposed deployment credential creates an unexpected workload. The API
 
 A secure API design combines trusted transport, narrow permissions, suitable admission, protected storage and useful evidence. Each part enforces or observes a particular boundary; none alone proves that every accepted declaration is harmless.
 
+## The Order Of The Checks
+
+The three checks run in a fixed order, and a request that fails one check stops there. This order explains most of the error messages an administrator sees, so it is worth knowing exactly.
+
+```mermaid
+flowchart TB
+  C["Client request"] --> A["Authentication"]
+  A -->|"identity known or anonymous"| Z["Authorization"]
+  Z -->|"allowed"| M["Mutating admission"]
+  M --> V["Validation and validating admission"]
+  V -->|"accepted"| S["Stored in etcd"]
+  A -->|"401 Unauthorized"| X["Request rejected"]
+  Z -->|"403 Forbidden"| X
+  V -->|"admission denial"| X
+```
+
+The diagram shows that only a request that passes authentication, authorization and admission reaches the datastore. A `401 Unauthorized` answer means the server could not establish an identity. A `403 Forbidden` answer means the identity is known but no authorizer allows the action. An admission denial names the policy or webhook that refused the object.
+
+## What The API Server Is Started With
+
+The kube-apiserver is configured with command-line flags, and the flags decide how each check works. On a cluster built with kubeadm, including the kind cluster of the playground, the server runs as a static pod and the flags are in its pod specification. These flags matter for security:
+
+- `--authorization-mode=Node,RBAC` selects the authorizers. `Node` authorizes kubelets for the objects of their own pods. `RBAC` evaluates roles and bindings. A value of `AlwaysAllow` would approve every request.
+- `--anonymous-auth` controls whether a request with no credentials is treated as the user `system:anonymous` in the group `system:unauthenticated`. The default is true, and RBAC then decides what that user may do.
+- `--client-ca-file` names the certificate authority used to verify client certificates.
+- `--tls-cert-file` and `--tls-private-key-file` are the serving certificate that clients verify.
+- `--enable-admission-plugins` adds admission plugins to the default set. `NodeRestriction` limits what a kubelet may change.
+- `--audit-policy-file` and `--audit-log-path` switch on audit logging.
+
+Anonymous requests are not the same as an open API. With the default flags, an anonymous caller can reach only a few public endpoints, such as `/healthz`, `/livez` and `/readyz`, through the built-in role `system:public-info-viewer`. Everything else needs an RBAC rule that names `system:anonymous` or `system:unauthenticated`. The danger is therefore a binding that someone adds, not the flag itself.
+
+## Try It: Read The Flags And Test An Identity
+
+Read the running configuration instead of guessing it. This command prints the API server static pod as YAML, and the `command` list holds the flags.
+
+<!-- astrona:playground:renew -->
+
+```sh
+kubectl -n kube-system get pod -l component=kube-apiserver -o yaml
+```
+
+Look for `--authorization-mode` and `--enable-admission-plugins` in the output. Then ask the API server how an anonymous caller is treated. The `--as` flag impersonates a user, and `--as-group` adds a group.
+
+```sh
+kubectl auth can-i list pods -n starfleet --as=system:anonymous --as-group=system:unauthenticated
+```
+
+In the playground the answer is `yes`, because the ClusterRoleBinding `public-reader` gives the `view` role to the group `system:unauthenticated`. Find the binding with `kubectl get clusterrolebindings -o wide`, and read its subjects. This one binding turns a harmless default into cluster-wide read access for any caller that can reach the server.
+
+The same request path explains why a stolen certificate or token is dangerous even over an encrypted connection. Transport Layer Security (TLS) protects the bytes in transit and lets the client verify the server. It does not limit what an accepted identity may do. That limit comes only from authorization, and from admission for the content of objects.
+
 ## Common pitfalls
 
 > [!WARNING]

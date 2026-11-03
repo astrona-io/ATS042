@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Close Node Access Paths In A Namespace (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-040
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: auditor-narrow-node-access
+    description: auditor reads nodes, metrics and stats only
+    type: file
+    source: validation/validate-auditor-narrow-node-access.sh
+    hint: Replace nodes/* with the names nodes/metrics and nodes/stats.
+  - name: ops-exec-only-in-deck
+    description: ops can exec only in deck and cannot attach or port-forward
+    type: file
+    source: validation/validate-ops-exec-only-in-deck.sh
+    hint: Delete the ClusterRoleBinding and use Roles and RoleBindings in deck. Leave
+      out pods/attach and pods/portforward.
+  - name: csr-approval-limited
+    description: Only the group pki-admins can approve certificate requests
+    type: file
+    source: validation/validate-csr-approval-limited.sh
+    hint: Delete the binding for system:authenticated and bind the ClusterRole csr-approver
+      to the group pki-admins.
+  - name: inspector-no-hostpath
+    description: inspector has no hostPath volume and is ready
+    type: file
+    source: validation/validate-inspector-no-hostpath.sh
+    hint: Remove the volume kubelet-dir and its volumeMount from the pod template
+      of the Deployment inspector.
+teardown:
+  keepCluster: false

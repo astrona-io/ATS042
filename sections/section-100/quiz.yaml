@@ -1,0 +1,253 @@
+# Knowledge check for section 100. Listed in astrona.yaml as a `type: quiz` entry after the capstone lab.
+schema_version: 1
+kind: question_bank
+id: ats042-100
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: section
+  id: section-100
+  title: Client Credentials And Configuration
+questions:
+- id: ats042-100-q01
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain what skipping TLS verification gives up.
+  source_readings:
+  - sections/section-100/module-01/course-01-kubeconfig-contexts-and-client-trust.md
+  prompt: A pipeline job fails with a certificate error when it contacts the API server.
+    A colleague sets insecure-skip-tls-verify to true in the kubeconfig and the job
+    works. What was given up?
+  options:
+  - id: a
+    text: Encryption of the connection.
+    explanation: The connection stays encrypted.
+  - id: b
+    text: The proof that the answering machine is the cluster API server, so the credential
+      can go to any machine that answers.
+    explanation: Correct. Verification is the check that identifies the server.
+  - id: c
+    text: The permissions of the user.
+    explanation: Permissions are decided by the server, not the client.
+  - id: d
+    text: The namespace of the context.
+    explanation: It is unrelated.
+  correct_option: b
+  explanation: Verification is the check that identifies the server.
+- id: ats042-100-q02
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Describe the parts of a kubeconfig file and what each one controls.
+  source_readings:
+  - sections/section-100/module-01/course-01-kubeconfig-contexts-and-client-trust.md
+  prompt: Which statement about changing the current context in a kubeconfig is correct?
+  options:
+  - id: a
+    text: It changes the permissions of the user on the server.
+    explanation: Permissions come from role bindings on the server.
+  - id: b
+    text: It selects a different server and credential for later commands and changes
+      no permissions.
+    explanation: Correct. The context pairs a cluster entry with a user entry.
+  - id: c
+    text: It rotates the credential.
+    explanation: It does not touch the credential.
+  - id: d
+    text: It makes cluster-scoped requests namespaced.
+    explanation: Cluster-scoped objects ignore the namespace.
+  correct_option: b
+  explanation: The context pairs a cluster entry with a user entry.
+- id: ats042-100-q03
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain why a kubeconfig from an unknown source is a risk.
+  source_readings:
+  - sections/section-100/module-01/course-01-kubeconfig-contexts-and-client-trust.md
+  prompt: A contractor sends a kubeconfig file by email for a shared test cluster.
+    The user entry contains an exec block with a shell command. Why should it be read
+    before it is used?
+  options:
+  - id: a
+    text: The exec block only formats output.
+    explanation: It starts a program.
+  - id: b
+    text: The client starts the program named in the file when it needs a credential,
+      so the file can run commands as the person who uses it.
+    explanation: Correct. The program runs with the rights of the local user.
+  - id: c
+    text: Exec blocks disable authorization.
+    explanation: They do not affect authorization.
+  - id: d
+    text: Exec blocks create a new service account.
+    explanation: They do not.
+  correct_option: b
+  explanation: The program runs with the rights of the local user.
+- id: ats042-100-q04
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Explain how a certificate subject maps to a user and groups.
+  source_readings:
+  - sections/section-100/module-01/course-02-client-certificates-and-signing-requests.md
+  prompt: A certificate has the subject CN=ana and O=ops. Which identity does the
+    API server see?
+  options:
+  - id: a
+    text: The user ops in the group ana.
+    explanation: The reverse.
+  - id: b
+    text: The user ana in the group ops.
+    explanation: Correct. The common name is the user and each organization is a group.
+  - id: c
+    text: The service account ana in the namespace ops.
+    explanation: Certificates do not map to service accounts.
+  - id: d
+    text: Nothing, because users must exist in a user database first.
+    explanation: Kubernetes has no user database.
+  correct_option: b
+  explanation: The common name is the user and each organization is a group.
+- id: ats042-100-q05
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain how a certificate subject maps to a user and groups.
+  source_readings:
+  - sections/section-100/module-01/course-02-client-certificates-and-signing-requests.md
+  prompt: A certificate request asks for the organization system:masters and a reviewer
+    approves it because the common name is a colleague. What is the result?
+  options:
+  - id: a
+    text: The certificate is signed without groups.
+    explanation: The subject is signed as requested.
+  - id: b
+    text: The colleague holds an identity in the group that the default cluster-admin
+      binding grants every permission.
+    explanation: Correct. The group in the subject is trusted as signed.
+  - id: c
+    text: The signer rejects the group.
+    explanation: The signer does not know which groups should be granted.
+  - id: d
+    text: The request is denied by the controller manager.
+    explanation: It only signs approved requests.
+  correct_option: b
+  explanation: The group in the subject is trusted as signed.
+- id: ats042-100-q06
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Walk through the request, approval and signing of a client certificate.
+  source_readings:
+  - sections/section-100/module-01/course-02-client-certificates-and-signing-requests.md
+  prompt: A signed client certificate was copied by an attacker. Which action ends
+    its use before the expiry date?
+  options:
+  - id: a
+    text: Delete the CertificateSigningRequest object.
+    explanation: The certificate stays valid.
+  - id: b
+    text: Revoke it in the API server revocation list.
+    explanation: There is no such list.
+  - id: c
+    text: Remove every role binding for the user and its groups, and use short lifetimes
+      in future.
+    explanation: Correct. Without permissions the identity can do nothing.
+  - id: d
+    text: Restart the controller manager.
+    explanation: It does not invalidate signed certificates.
+  correct_option: c
+  explanation: Without permissions the identity can do nothing.
+- id: ats042-100-q07
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Name the permissions that control certificate approval and token
+    creation.
+  source_readings:
+  - sections/section-100/module-01/course-02-client-certificates-and-signing-requests.md
+  prompt: Which pair of permissions lets a user approve a client certificate request?
+  options:
+  - id: a
+    text: create on certificatesigningrequests and get on nodes.
+    explanation: These do not approve.
+  - id: b
+    text: update on certificatesigningrequests/approval and approve on the signer
+      name under signers.
+    explanation: Correct. Both are needed for the decision on a signer.
+  - id: c
+    text: delete on certificatesigningrequests.
+    explanation: It removes objects.
+  - id: d
+    text: list on secrets and watch on pods.
+    explanation: These are unrelated.
+  correct_option: b
+  explanation: Both are needed for the decision on a signer.
+- id: ats042-100-q08
+  type: single_choice
+  difficulty: beginner
+  learning_objective: Compare short-lived tokens with legacy token Secrets.
+  source_readings:
+  - sections/section-100/module-01/course-03-service-account-tokens-and-automation-credentials.md
+  prompt: A token from kubectl create token was requested with a duration of 10 minutes.
+    What happens after ten minutes?
+  options:
+  - id: a
+    text: It works until the service account is deleted.
+    explanation: The expiry is part of the token.
+  - id: b
+    text: The API server rejects it because it has expired, with no action needed.
+    explanation: Correct. Short-lived tokens carry an expiry.
+  - id: c
+    text: It is converted to a legacy token.
+    explanation: It is not.
+  - id: d
+    text: It works but only for reads.
+    explanation: The expiry rejects all requests.
+  correct_option: b
+  explanation: Short-lived tokens carry an expiry.
+- id: ats042-100-q09
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Compare short-lived tokens with legacy token Secrets.
+  source_readings:
+  - sections/section-100/module-01/course-03-service-account-tokens-and-automation-credentials.md
+  prompt: A Secret of type kubernetes.io/service-account-token exists for a service
+    account that is bound to a strong role. Which statement is correct?
+  options:
+  - id: a
+    text: The token expires after one hour.
+    explanation: This kind has no expiry.
+  - id: b
+    text: The token works wherever it is copied until the Secret or account is deleted.
+    explanation: Correct. It has no expiry and is not bound to a pod.
+  - id: c
+    text: The token is valid only inside the cluster.
+    explanation: The token is a bearer credential and works from anywhere that reaches
+      the API.
+  - id: d
+    text: The token is rotated by kubelet.
+    explanation: Kubelet rotates projected tokens, not this kind.
+  correct_option: b
+  explanation: It has no expiry and is not bound to a pod.
+- id: ats042-100-q10
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Remove the access of a leaked credential in the correct order.
+  source_readings:
+  - sections/section-100/module-01/course-03-service-account-tokens-and-automation-credentials.md
+  prompt: A build credential for a service account was found in a public repository.
+    What is the correct order of the response?
+  options:
+  - id: a
+    text: Wait for the token to expire, then remove the bindings.
+    explanation: A legacy token does not expire.
+  - id: b
+    text: Remove the role bindings, delete the credential, then read the audit log
+      for its use.
+    explanation: Correct. Permissions go first, so a copy is worthless.
+  - id: c
+    text: Read the audit log, then restart the API server.
+    explanation: A restart does not revoke tokens.
+  - id: d
+    text: Rename the service account.
+    explanation: Names do not revoke the credential.
+  correct_option: b
+  explanation: Permissions go first, so a copy is worthless.

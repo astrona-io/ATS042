@@ -1,0 +1,26 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: service-editor
+  namespace: lane
+rules:
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lane-ops-service-editor
+  namespace: lane
+subjects:
+  - kind: ServiceAccount
+    name: lane-ops
+    namespace: lane
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: service-editor

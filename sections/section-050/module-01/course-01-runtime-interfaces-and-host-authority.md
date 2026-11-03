@@ -5,35 +5,88 @@ exam_objectives:
 ---
 # Runtime Interfaces And Host Authority
 
-Kubernetes needs software on each node that can pull images and manage containers. The container runtime provides that execution capability. The kubelet coordinates Pod execution and communicates with a runtime through the Container Runtime Interface (CRI), an interface contract for Kubernetes container management.
+Kubernetes does not start containers itself. On every node a container runtime pulls images, creates the isolated process and reports its state. The runtime acts with the authority of the node, so whoever can instruct it can run code on the host. This part explains which components take part in starting a container, which interfaces they use and where that authority sits.
 
-Containerd and CRI-O are examples of runtimes used with Kubernetes. The runtime manages images, container lifecycle and related operations. A lower-level runtime such as runc can create the operating system isolation and start a container process. Separating these layers explains why image management and process creation are related but not identical jobs.
+## The Layers Between A Pod And A Process
 
-The Open Container Initiative (OCI) defines specifications for container images, runtime behavior and image distribution. These standards help compatible tools exchange artifacts and execute containers. The CRI describes Kubernetes-to-runtime integration; OCI specifications describe other interoperability contracts. They are not interchangeable names for one application programming interface (API).
+Starting a pod involves four layers on the node:
 
-A developer can build an image with one tool and run it with another compatible runtime. Kubernetes does not require that the same build tool be installed on every worker node. Nodes need an appropriate runtime and access to the image, not the source repository and development build environment.
+1. The kubelet watches the API server for pods assigned to its node and decides which containers must exist.
+2. The Container Runtime Interface (CRI) is a gRPC API that the kubelet calls. It has an image service for pulling and listing images, and a runtime service for creating pod sandboxes and containers.
+3. A high-level runtime such as containerd or CRI-O implements the CRI. It stores images, unpacks them into a filesystem and tracks container state.
+4. A low-level runtime such as runc follows the Open Container Initiative (OCI) runtime specification. It creates the Linux namespaces and control groups, sets up the filesystem and starts the process.
 
-A runtime failure can prevent assigned Pods from starting even when the API server and scheduler are healthy. A build failure happens before a usable image exists. An image pull failure concerns artifact access or selection. Correctly identifying the layer avoids blaming every container problem on the Kubernetes control plane.
+```mermaid
+flowchart TB
+  A["kube-apiserver"] -->|"pod assigned to node"| K["kubelet"]
+  K -->|"CRI over a local socket"| R["containerd or CRI-O"]
+  R -->|"OCI runtime call"| L["runc"]
+  L -->|"namespaces and cgroups"| P["Container process"]
+```
 
-For a question about who starts the process, choose the node execution components. For a question about how the kubelet requests container operations, identify the CRI. For portable artifact formats, identify the relevant OCI specification.
+The diagram shows one direction of control. The API server never talks to the runtime. Only the kubelet does, through a socket file on the same machine.
 
-## Following Runtime Operations On A Node
+## The Runtime Socket
 
-An assigned Pod tells the kubelet which containers should exist. The kubelet requests operations from the configured runtime through the CRI. The runtime obtains images, prepares container execution state and manages lifecycle operations. Lower-level components create namespaces, cgroups and the process according to the runtime's implementation.
+The CRI is served on a Unix domain socket. For containerd the default path is `/run/containerd/containerd.sock`. The kubelet is told the path with the setting `containerRuntimeEndpoint`. A Unix socket is protected by file permissions, and the socket of a runtime is owned by root.
 
-A networking plugin can participate in preparing the Pod sandbox, while storage components provide mounted data. The runtime is essential to execution, but it does not independently own all placement, network policy or durable storage decisions. A runtime-ready node can still have an application blocked by an unavailable volume.
+Anything that can open this socket can send CRI calls. It can list every container on the node, create a new container with any image and any mounts, and run commands in existing containers. The runtime does not ask the Kubernetes API server whether that is allowed, so Kubernetes RBAC and admission policies do not apply to calls made through the socket. This is the first reason runtime access is host authority.
 
-This division explains several symptoms. If the kubelet cannot communicate with its runtime, container creation can fail across workloads on that node. If one artifact reference is invalid, only workloads depending on it may fail. If an application starts and rejects its settings, execution worked well enough to reach application logic, so the next evidence belongs at that layer.
+## What Is Visible Through The Kubernetes API
 
-## Portable Artifacts And Interface Compatibility
+You cannot inspect the socket from the API server, but the node reports the runtime that it uses. The field `status.nodeInfo.containerRuntimeVersion` of a Node shows the name and version, for example `containerd://` followed by a version number. The kubelet also records the container identifier of each container in the pod status, with the runtime name as the prefix.
 
-An OCI-compatible image describes filesystem content and runtime configuration through a defined format. A build tool produces that artifact; a runtime consumes it. The CRI provides the kubelet's integration boundary to the runtime. A platform needs compatible components at both boundaries, not a claim that one standard covers every interaction.
+<!-- astrona:playground:renew -->
 
-Processor architecture remains part of compatibility. A portable format containing only an unsupported architecture variant cannot execute normally on the node merely because its metadata follows a standard. Operating system requirements and runtime capabilities also matter.
+Check which runtime the nodes use:
 
-Avoid assuming Docker as a development tool must be the node runtime. Teams can build through one compatible toolchain and execute through containerd or CRI-O. The important reasoning is which artifact was produced, which interface the node uses and whether the execution platform supports the selected content.
+```sh
+kubectl get nodes -o wide
+```
+
+The column `CONTAINER-RUNTIME` shows the runtime and its version. Read the same field for one node:
+
+```sh
+kubectl get nodes -o jsonpath='{.items[0].status.nodeInfo.containerRuntimeVersion}'
+```
+
+Then read the runtime's identifier for the container of a running pod:
+
+```sh
+kubectl -n starfleet get pods -l app=scout -o jsonpath='{.items[0].status.containerStatuses[0].containerID}'
+```
+
+The value starts with the runtime name, followed by `://` and a long hexadecimal identifier. That identifier is the container that the runtime created for this pod.
+
+## Events Show The Runtime Steps
+
+The kubelet writes an event for each step it asks the runtime to perform. Describe the pod to read them:
+
+```sh
+kubectl -n starfleet describe pod -l app=scout
+```
+
+The events list `Pulling` and `Pulled` for the image service, then `Created` and `Started` for the runtime service. If the image name is wrong, the events show `ErrImagePull` or `ImagePullBackOff` and the container never exists. If the runtime cannot create the sandbox, the events show `FailedCreatePodSandBox`. Each message points at a different layer.
+
+## Image Handling
+
+The runtime stores pulled images on the node, in a content store keyed by digest. A tag such as `1.0` is a name that can be moved to a different image later. A digest, written `image@sha256:...`, names exact content. The field `imagePullPolicy` controls whether the kubelet asks the runtime to pull: `Always` checks the registry each time, `IfNotPresent` reuses a local copy and `Never` only uses a local copy.
+
+A node that has cached an image runs it even if the registry copy changed. That is useful for speed and a risk for consistency. When trust matters, reference images by digest, so every node runs the same content.
+
+## OCI And CRI Are Different Contracts
+
+The OCI publishes specifications for the image format, the runtime and the distribution of images. The CRI is a Kubernetes interface. A runtime that implements the CRI usually relies on OCI specifications below it. They do not replace each other, and a cluster can build images with one tool and run them with another because both follow the OCI image format.
+
+## Failure Cases
+
+Three failures look similar and have different causes:
+
+- The image cannot be pulled. The events mention `ErrImagePull`. Check the registry name, the tag and the pull credentials.
+- The runtime service is down. Every new pod on the node stays in `ContainerCreating`, and the node may report `NotReady`. Check the runtime service on the node.
+- The process starts and exits at once. The container shows `CrashLoopBackOff`. The runtime worked, and the problem is inside the application.
 
 ## Common pitfalls
 
 > [!WARNING]
-> CRI is the kubelet's runtime integration interface. OCI specifications cover image, runtime and distribution interoperability; they do not replace that interface.
+> The runtime socket is host authority. Kubernetes RBAC does not protect calls made through it, so no workload should receive access to that socket unless it is part of node management.

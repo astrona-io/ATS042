@@ -3,15 +3,21 @@ draft: true
 exam_objectives:
   - Etcd
 ---
-# Etcd
+# Etcd And Stored Cluster Data
 
-This section teaches etcd and stored cluster data. These ideas help you explain system behavior and choose a suitable approach in a KCSA scenario.
+Etcd holds every object of the cluster, including every Secret. The API server is the only component that should reach it, so anything that opens a second path to the database or to its backups also opens every credential that it stores.
 
-You will work through Etcd And Stored Cluster Data. Each module introduces its goals, teaches the concepts through examples, and closes with a summary. Reusable YAML checkpoints review related objectives after selected section summaries. The course assessment index records their placement and coverage.
+## Learning outcomes
 
-## Learning Outcomes
+- Explain why a client of etcd skips the checks of the API server.
+- Name the etcd flags that require certificate authentication for clients and peers.
+- Identify the node paths that hold the database and the keys.
+- Explain what encryption at rest protects and what it does not.
+- Describe how to enable and rotate keys for encryption at rest in the right order.
+- Explain which RBAC rights return Secret contents and how to narrow them.
+- Calculate quorum and explain why replication is not a backup.
+- Describe what a snapshot contains and what a restore does not bring back.
 
-- Explain why direct etcd access is a powerful security boundary.
-- Distinguish transport encryption, storage encryption and authorization.
-- Relate quorum, backups and access control to recovery.
-- Identify sensitive information in datastore snapshots.
+## What is in this section
+
+The section has one module, Etcd And Stored Cluster Data. It has 3 reading parts, a summary and a playground: a cluster to read the etcd configuration, inspect Secrets and narrow Secret read rights. A graded lab follows the reading part it practises. A capstone lab closes the section with a new scenario, and a knowledge check of ten questions follows the capstone.

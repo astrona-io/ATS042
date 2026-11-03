@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Storage Access And Data Security (PLAYGROUND). A clean sandbox with no task and no grading. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-playground-110-01
+  docs:
+    guide: docs/overview.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - ghcr.io/stefanprodan/podinfo:6.15.0
+    - mccutchen/go-httpbin:2.25.0
+    - curlimages/curl:8.22.0
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: prepare
+    description: Create the workloads and the starting state
+    type: file
+    source: bootstrap/prepare.sh
+teardown:
+  keepCluster: false

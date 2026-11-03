@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Secure The Depot Storage (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-110
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: scanner-no-hostpath
+    description: scanner mounts no node directory
+    type: file
+    source: validation/validate-scanner-no-hostpath.sh
+    hint: Remove the hostPath volume and its mount from the Deployment scanner.
+  - name: auditor-read-only
+    description: auditor mounts manifest read-only
+    type: file
+    source: validation/validate-auditor-read-only.sh
+    hint: 'Set readOnly: true on the volume mount of auditor and keep the claim.'
+  - name: depot-refuses-hostpath
+    description: depot rejects hostPath pods and its Deployments stay ready
+    type: file
+    source: validation/validate-depot-refuses-hostpath.sh
+    hint: Label the namespace with pod-security.kubernetes.io/enforce=baseline after
+      the Deployments no longer use hostPath.
+  - name: manifest-retained
+    description: the volume behind manifest is retained
+    type: file
+    source: validation/validate-manifest-retained.sh
+    hint: Patch spec.persistentVolumeReclaimPolicy of the PersistentVolume to Retain.
+  - name: intern-no-workloads
+    description: intern reads claims and starts nothing
+    type: file
+    source: validation/validate-intern-no-workloads.sh
+    hint: Replace the Role rules with get and list on persistentvolumeclaims only.
+  - name: writer-intact
+    description: writer still writes to a bound claim
+    type: file
+    source: validation/validate-writer-intact.sh
+    hint: This is a guard. Do not change writer or delete the claim.
+teardown:
+  keepCluster: false

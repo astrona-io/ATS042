@@ -5,37 +5,112 @@ exam_objectives:
 ---
 # Protecting Runtime Access And Execution Privileges
 
-A runtime can create and manage container processes on a node. Access to its management interface can therefore grant authority far beyond a normal application's network endpoint. Protecting the runtime includes its host process, sockets, configuration and the identities allowed to control it.
+A container is a process with restricted views of the host. The restrictions come from Linux namespaces, control groups, capabilities and filters, and a pod specification can remove each one of them. This part explains which pod settings widen access to the host and the runtime, and how Pod Security Admission rejects them before a pod is created.
 
-## Management Sockets Are Not Ordinary Application Data
+## Settings That Remove Isolation
 
-A socket is a communication endpoint through which processes can request operations. A runtime management socket can permit image and container operations with powerful host consequences. Mounting it into an application container can bypass the intended abstraction in which the workload receives only its own resources.
+These pod and container fields give a process more host authority than a normal workload needs:
 
-A read-write host mount is another route to sensitive control files. A privileged container can receive broad capabilities and access that weaken ordinary namespace and device restrictions. Even a non-root process can be dangerous if it receives a powerful socket or usable external credential. Evaluate capabilities and interfaces, not only the numeric user.
+- `securityContext.privileged: true` gives the container nearly all capabilities and access to host devices, and turns off most filtering.
+- `hostPath` volumes mount a file or directory of the node into the container. Mounting the runtime socket or a directory such as `/var/lib` gives control over other workloads.
+- `hostNetwork`, `hostPID` and `hostIPC` place the pod in the host's network, process or inter-process communication namespace. With `hostPID` a container can see and signal host processes.
+- `capabilities.add` grants Linux capabilities. `SYS_ADMIN` and `NET_ADMIN` are powerful, and `SYS_ADMIN` covers many privileged operations.
+- `allowPrivilegeEscalation: true` lets a process gain more privileges than its parent through setuid binaries.
+- Running as user ID 0 inside the container is root inside the container. Combined with another weakness, it becomes root on the host.
 
-Keep runtime control paths available only to trusted node-management components. File permissions, host administration and workload mount policy all matter. Network policy generally cannot compensate for a local socket already mounted into the compromised process.
+A non-root user ID does not make a pod safe. A pod with `privileged: true` and a non-root user can still reach devices, and a pod that mounts the runtime socket does not need any special user at all.
 
-## Images And Process Configuration
+## Safer Defaults
 
-The runtime consumes the selected image and starts its configured process. An approved registry name does not prove the image contents are trustworthy, and a valid artifact can still be run with dangerous privileges. Supply chain checks and execution controls protect separate stages.
+Set these fields for ordinary workloads:
 
-Verify exact artifact identity, maintain dependencies and keep runtime software patched. The runtime and host kernel are part of the trusted computing environment because many containers depend on them. A flaw in those shared components can affect several workloads even when application permissions are individually narrow.
+- `runAsNonRoot: true` and an explicit `runAsUser`.
+- `allowPrivilegeEscalation: false`.
+- `capabilities.drop: ["ALL"]`, and add back only a capability that is proven necessary.
+- `seccompProfile.type: RuntimeDefault`, which applies the runtime's default filter of system calls.
+- `readOnlyRootFilesystem: true` where the application allows it.
 
-Resource enforcement also depends on this environment. A runtime applies or coordinates configured process limits through the underlying system. Those limits can constrain central processing unit (CPU) and memory consumption, but they do not provide fair access to every external dependency or repair application logic.
+```mermaid
+flowchart TB
+  U["Pod create request"] --> A["Authentication and RBAC"]
+  A --> P["Pod Security Admission"]
+  P -->|"violates the namespace level"| X["Rejected"]
+  P -->|"meets the level"| S["Stored in etcd"]
+  S --> K["Kubelet and runtime start it"]
+```
 
-## Isolation And Stronger Execution Boundaries
+The diagram shows that Pod Security Admission runs after RBAC and before the pod is stored. A pod that is rejected never reaches a kubelet.
 
-Ordinary Linux containers commonly share a kernel. A sandboxed runtime or virtual-machine-based approach can provide a different isolation boundary where supported. The choice affects compatibility, performance and operations, so it should follow workload trust and consequence rather than a general preference for more layers.
+## Pod Security Admission
 
-A stronger execution boundary still needs correct credential handling and network permission. A perfectly isolated malicious process can misuse the legitimate database role it receives. Containment protects the host and other processes, while data authorization limits permitted operations on shared services.
+Pod Security Admission is built into the API server. It reads labels on a namespace and checks each pod against one of three Pod Security Standards:
 
-## Responding To Runtime-Level Compromise
+- `privileged` has no restrictions.
+- `baseline` blocks known escalations: privileged containers, host namespaces, hostPath volumes, added capabilities beyond a short list and some unsafe settings.
+- `restricted` follows current hardening practice. It requires non-root users, dropped capabilities, no privilege escalation and a seccomp profile.
 
-If a powerful runtime control path was exposed, deleting the suspicious application container may be insufficient. Investigate containers, host files, credentials and cluster actions that could have been changed through that authority. Rebuild from trusted state and replace exposed credentials according to the incident scope.
+Each standard can be used in three modes, set by label: `enforce` rejects the pod, `audit` records an audit annotation and `warn` shows a warning to the client. The label has the form `pod-security.kubernetes.io/enforce: baseline`. A level label can be paired with a version label that pins the rules to a Kubernetes release, and `latest` is the default.
 
-A sound runtime explanation identifies who can issue execution requests, what privileges resulting processes have and which shared host components remain trusted. These are concrete boundaries that can be reviewed independently of whether an application happened to start successfully.
+Enforcement applies when a pod is created or updated. It does not stop pods that already run. A workload controller that creates pods that violate the level fails when the controller tries to create them, so a Deployment can show zero ready replicas while the error appears in the events of its ReplicaSet.
+
+## Save A Pod That Breaks The Rules
+
+Save this as `socket-pod.yaml`:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: socket-test
+  namespace: outpost
+spec:
+  containers:
+    - name: test
+      image: busybox:1.37.0
+      command: ["sleep", "3600"]
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: runtime-socket
+          mountPath: /run/containerd
+  volumes:
+    - name: runtime-socket
+      hostPath:
+        path: /run/containerd
+        type: Directory
+```
+
+<!-- astrona:playground:renew -->
+
+The playground cluster does not label the namespace, so the API server accepts this specification. Check by asking the server to validate it without saving it:
+
+```sh
+kubectl apply --dry-run=server -f socket-pod.yaml
+```
+
+The server accepts it, because no standard is enforced. Now label the namespace to enforce the baseline standard:
+
+```sh
+kubectl label namespace outpost pod-security.kubernetes.io/enforce=baseline --overwrite
+```
+
+Then check the result by running the same dry run again:
+
+```sh
+kubectl apply --dry-run=server -f socket-pod.yaml
+```
+
+This time the server rejects the pod and the message names the violated checks, such as the privileged container and the hostPath volume. The label can take a few seconds to take effect, so repeat the command once if the first answer is still an acceptance.
+
+## What PSA Does Not Cover
+
+Pod Security Admission checks pod fields. It does not decide who may create pods, and it does not look at images. It also gives one level per namespace, so a namespace that needs one privileged agent must either hold only that agent or use an exemption. For finer rules, an admission policy written in CEL can reject or require specific fields. Node-level protection, such as a locked-down runtime socket, remains a host task that no pod field replaces.
+
+## Responding To Exposed Runtime Control
+
+If a workload ever had access to the runtime socket or ran privileged, treat the node as exposed. Delete the workload, but also review the other containers on the node, the host files that the workload could write and the credentials that it could read. Rebuild the node from a trusted image when integrity cannot be shown, and rotate the Secrets of the pods that ran there.
 
 ## Common pitfalls
 
 > [!WARNING]
-> A runtime socket or broad host mount can grant powerful authority even to a non-root container. Image verification and runtime isolation do not replace application data permissions.
+> A non-root user does not make a privileged container or a runtime-socket mount safe. Enforce a Pod Security level on every workload namespace, and remember that the label does not remove pods that already run.

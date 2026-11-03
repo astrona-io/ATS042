@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dock
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: courier
+  namespace: dock
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: courier-token
+  namespace: dock
+  annotations:
+    kubernetes.io/service-account.name: courier
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: courier-admin
+subjects:
+  - kind: ServiceAccount
+    name: courier
+    namespace: dock
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deploy-kubeconfig
+  namespace: dock
+data:
+  config: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: dock
+        cluster:
+          server: https://203.0.113.10:6443
+          insecure-skip-tls-verify: true
+    users:
+      - name: runner
+        user:
+          token: example-token-value
+    contexts:
+      - name: dock
+        context:
+          cluster: dock
+          user: runner
+    current-context: dock
+---
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: ensign
+spec:
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1p6Q0NBVThDQVFBd0lqRVBNQTBHQTFVRUF3d0daVzV6YVdkdU1ROHdEUVlEVlFRS0RBWmljbWxrWjJVdwpnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDb0I5OWIrN2NkOCsvcFB4UXpJRFV0CnN1TlBza2M4TitpcFE2QTZDMWZjZEdqVi9aZmFaQitOVHVRT1FkL1dOTWpqSWc0K05TcUxMQ1BSVXV5enY0T2MKV1hMcjJIakJIWVdOSlBnTk1lZ2xmeFRJZXM5dURNVW15REZLNnNyR3NpRnlCTFFGbW1qYzlSUEZYWnhqV21oUAp2aExUTDRXakxhOXhBMkpDeDUvZnJTOEhRZ3lMODh1cDMzT1VtS0k0YXY2dWFySXNZQlRaS3FpSW9aellHMlFHCklIYnBsRVUwdExZdTY0N1k5dUpYci8yMUo5K1A4UStCV0RsR2w2Wlo4WU9icEJGdXREY0l5VDFjbzZBLzdlV0kKcnpSRFhKSmFNaURxeW5pUXpZYjZjdmYwREVIM1h5Y296ZndUbFVSQ3pSUXZVRUVDQnNEUXFOYitvNmhSZU9lUgpBZ01CQUFHZ0FEQU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFtem9sWGhBQnhGWGNxRkNKTFZjUkpTQkdZcWxZCkN3K29FcWZ2bWtWTkg4MTQwWk1XRlg1U1FPeXRJOXRHeWNZTEt5LzdrTm9wTk1BSHh5WHVxT3V4TG5aeXEzSk0KRTVVMDU1YndjK0M0aUM5NHRPakNDV1J5TVl1V3poYzhSU3o2RWZXVmFvdDJIR3A5Q0huejFjOHpaL1VpVE5ibgpOSTdyREpEclNPTklxWnE3dmFQaVZYUFRkUEJSV3VnbDdFaWRuemh5RTlsLzJWdmJtNThqSG1DbGVkazhjKyt4ClNlcHdxOUNzc0QyVWFXZW43Y3g5d0VkdmQ5NWVOd1ZxZHoxMUlrZnZYTWpIcXhBRURlM1pkODVIRTdpdnVvRHgKMXh3eTk5Q1N3akpnSlBkeC93OTZRVDBlQWJYQ2o5bHFJN25JNnZady9tanVIcWtUOGNqWWpVaWVYdz09Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 3600
+  usages:
+    - client auth
+---
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: intruder
+spec:
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ2J6Q0NBVmNDQVFBd0tqRVBNQTBHQTFVRUF3d0daVzV6YVdkdU1SY3dGUVlEVlFRS0RBNXplWE4wWlcwNgpiV0Z6ZEdWeWN6Q0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0NnZ0VCQUpWdDdtTWZlbnZKCmNpQXhoY2hMQysxdzhMMGRIMm9rV2pTTTl6Rzg1WmlHQzc5UXJhM1RRMjB6b1dHbTgzRmVOQms0djVhVE5GeXkKTm0wV01oendQTmJaZ2hyWFVvSXU2U0gvYkhyY3hnMnVwNTdrdHM2aXpwMHdjTHhnRmtuU05OQlZQbUhtQUpyOAplWmxDTDVqZ0JEa2QzZEtLYU9oNUFVZUlEbWUxZVZoNG1oMjNJbzM4RVNBL0hZaFgrTThhOWRVMzhpTWh0dlViCktaaUU3emYyd2xxNno1VjBQQnhVeE5FNk9zb3ZWWk1hTHNhTVNROW1JZm5kNm1MVzNvb0pYa3l2RzVscE9MSFIKRzlwWC9NdnNvcFpuNEQyNHF6ZXFTM3VPTVlwMTJZbnJiS0M5LzdnY0h1SEZoYlhyZ0VXbW9zaG4zdmYxYlM2VQo0ZlpuTFlENUo3MENBd0VBQWFBQU1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQ0N6U0lTeUVMaFh6a1B2UXB0Ci8rd3Y4S0JUZjlXMWREWmZBUnNXRStPanZGVW1QUGFIcm9JM090TWNJeVhpOHc0ajRRdHNGc3VzajVsOVg2TWgKRDhUckdUUHUrbGxRa1JiZHVjTVZwMW9vUkVUbWZQRXJxL21oREdzdW1rZVdZT0ZvWEJGVi9MU20rUlRtYzlQdwppbksvaDVkQlpkd2g0cUFleW9lOEUwNS8vcjE3ZG9PTWpRMTAvd3ZnYmFWZXZvM3c5TTdaZUJLaEYzU1RSNjVZCmNmYUIwV3dsakd3SDFSeUF6WHUrdk9lYzBoV1NYMHlGc29tK3ZpVnFRMEZ3cHZXVUxkOTkwRkIxMmxjbEpQaUgKdGV6L0xUcndyci9jZE0raGd3TFBob0pocmZzZE0yUUVFM25CSklkSk5YS0tZbHNzeEM4d1pNaU9SS3NrK25ZaApFRG82Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 3600
+  usages:
+    - client auth

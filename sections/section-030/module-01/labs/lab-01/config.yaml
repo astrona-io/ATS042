@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Protect A Restricted Node Pool (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-030-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+    nodes:
+      workers: 2
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: vault-on-restricted-node
+    description: The vault pod runs on the restricted node
+    type: file
+    source: validation/validate-vault-on-restricted-node.sh
+    hint: Add a toleration for key tier, value restricted, effect NoSchedule to the
+      pod template of the Deployment vault.
+  - name: other-workloads-off-restricted-node
+    description: No other workload tolerates the restricted taint
+    type: file
+    source: validation/validate-other-workloads-off-restricted-node.sh
+    hint: Do not add the toleration to scout or any other Deployment, and do not remove
+      the taint.
+  - name: intern-cannot-change-nodes
+    description: intern cannot patch or update nodes but can still read them
+    type: file
+    source: validation/validate-intern-cannot-change-nodes.sh
+    hint: Edit the ClusterRole node-labeler so it keeps only get and list on nodes.
+  - name: nodename-rejected-in-outpost
+    description: A pod with spec.nodeName is rejected in outpost
+    type: file
+    source: validation/validate-nodename-rejected-in-outpost.sh
+    hint: Create a ValidatingAdmissionPolicy that matches CREATE on pods, and a binding
+      with action Deny for the namespace outpost.
+teardown:
+  keepCluster: false

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reporter
+  namespace: ledger
+  labels:
+    app: reporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reporter
+  template:
+    metadata:
+      labels:
+        app: reporter
+    spec:
+      serviceAccountName: reporter
+      containers:
+        - name: reporter
+          image: busybox:1.37.0
+          command: ["sh", "-c", "while true; do cat /data/log.txt > /dev/null 2>&1; sleep 10; done"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: records
+            readOnly: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inspector
+  namespace: ledger
+  labels:
+    app: inspector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inspector
+  template:
+    metadata:
+      labels:
+        app: inspector
+    spec:
+      serviceAccountName: inspector
+      containers:
+        - name: inspector
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

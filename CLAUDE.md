@@ -203,13 +203,25 @@ The course covers **Kubernetes Cluster Component Security**, worth **22%** of
 **Kubernetes and Cloud Native Security Associate (KCSA)**. It is part of **ATP009**.
 The official objectives are listed in `astrona.yaml` and mapped in `CURRICULUM.md`.
 
-### Reading-only scope
+### Scope: readings, playgrounds, labs, capstones and quizzes
 
-The maintainer approved the lesson plan, asked for deeper teaching, and explicitly
-requested **no labs or playgrounds**. That instruction overrides shared examples
-about hands-on environments, graded labs and playground markers. Do not create
-runtime configurations, executable exercises or playground lifecycle markers.
-The course must be usable without a cluster or installed command-line tools.
+The first draft of this course was reading-only. On 2026-11-03 the maintainer
+approved overriding that rule. The course now has, for each section: a module
+with a playground, a graded lab, a capstone lab and a `quiz.yaml`, plus
+`sections/final-domain-quiz.yaml`. The shared rules above about playground
+markers, labs after parts and summaries ending in
+`<!-- astrona:playground:destroy -->` apply. Existing readings and the YAML
+question banks (`sections/section-0X0/questions.yaml`, `assessments/`) are kept.
+
+All labs and playgrounds are UNTESTED: built with static checks only
+(`astrona validate -c`, `bash -n`, Ruby YAML parsing). Never claim runtime
+verification, and never write command output that was not produced by a real
+run. Each lab README says UNTESTED.
+
+Environment facts: kind node image `kindest/node:v1.35.8`; example workloads
+as in the Starfleet table (`scout` podinfo 6.15.0, `probe` go-httpbin 2.25.0,
+`shuttle` and `drifter` curl 8.22.0); graders use `kubectl` only (no node
+shell); NetworkPolicy labs use `runtime.kind.addons.cni: calico`.
 
 ### Teaching structure and depth
 

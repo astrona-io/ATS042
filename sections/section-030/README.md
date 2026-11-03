@@ -5,13 +5,18 @@ exam_objectives:
 ---
 # Scheduler
 
-This section teaches scheduler integrity and availability. These ideas help you explain system behavior and choose a suitable approach in a KCSA scenario.
+The kube-scheduler decides which node runs each new pod. It does not start containers, but its decisions control where code runs, which workloads share a node and whether pods run at all. This section explains how placement works, which settings turn a placement rule into a security rule, and how scheduling fails.
 
-You will work through Scheduler Integrity And Availability. Each module introduces its goals, teaches the concepts through examples, and closes with a summary. Reusable YAML checkpoints review related objectives after selected section summaries. The course assessment index records their placement and coverage.
+## Learning outcomes
 
-## Learning Outcomes
+- Describe the scheduling cycle: filtering, scoring and binding.
+- Use nodeSelector, affinity, taints and tolerations, and explain what each one guarantees.
+- Explain why labels used for security need controlled ownership, and what NodeRestriction does.
+- Explain how spec.nodeName and the pods/binding subresource bypass the scheduler, and block them.
+- Use PriorityClass, preemption and ResourceQuota scopes to protect availability.
+- Diagnose a Pending pod from its FailedScheduling events.
+- Read the scheduler flags and configuration that affect security.
 
-- Explain what the scheduler decides and what it cannot execute.
-- Relate node labels and placement rules to security assumptions.
-- Identify the impact of scheduler identity or configuration compromise.
-- Distinguish placement controls from complete tenant isolation.
+## What is in this section
+
+The section has one module, Scheduler Integrity And Availability. It has 3 reading parts, a summary and a playground: a three-node cluster with one restricted node, a Pending workload that needs it and a service account that can change node labels. A graded lab follows the reading part it practises. A capstone lab closes the section with a new scenario, and a knowledge check of ten questions follows the capstone.

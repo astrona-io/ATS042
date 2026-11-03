@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dock
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loader
+  namespace: dock
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: builder
+  namespace: dock
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: runner
+  namespace: dock
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loader
+  namespace: dock
+  labels:
+    app: loader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loader
+  template:
+    metadata:
+      labels:
+        app: loader
+    spec:
+      serviceAccountName: loader
+      containers:
+        - name: loader
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          volumeMounts:
+            - name: runtime-dir
+              mountPath: /host-runtime
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: runtime-dir
+          hostPath:
+            path: /run/containerd
+            type: Directory
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: builder
+  namespace: dock
+  labels:
+    app: builder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: builder
+  template:
+    metadata:
+      labels:
+        app: builder
+    spec:
+      serviceAccountName: builder
+      hostPID: true
+      containers:
+        - name: builder
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: runner
+  namespace: dock
+  labels:
+    app: runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: runner
+  template:
+    metadata:
+      labels:
+        app: runner
+    spec:
+      serviceAccountName: runner
+      containers:
+        - name: runner
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

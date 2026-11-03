@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Isolate Workloads With NetworkPolicy (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-090-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - ghcr.io/stefanprodan/podinfo:6.15.0
+    - mccutchen/go-httpbin:2.25.0
+    - curlimages/curl:8.22.0
+    addons:
+      cni: calico
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: probe-only-shuttle
+    description: only shuttle reaches probe
+    type: file
+    source: validation/validate-probe-only-shuttle.sh
+    hint: Create a NetworkPolicy that selects app=probe and allows ingress from app=shuttle
+      on TCP 8080.
+  - name: scout-namespace-only
+    description: scout accepts the namespace starfleet only
+    type: file
+    source: validation/validate-scout-namespace-only.sh
+    hint: Select app=scout and allow ingress from an empty podSelector on TCP 9898.
+  - name: shuttle-egress-limited
+    description: shuttle reaches probe and scout by name and nothing else
+    type: file
+    source: validation/validate-shuttle-egress-limited.sh
+    hint: Write an Egress policy for app=shuttle with rules for DNS (53 UDP and TCP
+      to kube-dns in kube-system), probe on 8080 and scout on 9898.
+  - name: outpost-untouched
+    description: drifter still reaches beacon
+    type: file
+    source: validation/validate-outpost-untouched.sh
+    hint: This is a guard. Do not add policies that block traffic inside outpost.
+teardown:
+  keepCluster: false

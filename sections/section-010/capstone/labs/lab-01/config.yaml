@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Secure A New Team Namespace At The API (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-010
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: everyone-edit-removed
+    description: Authenticated users cannot edit objects across namespaces
+    type: file
+    source: validation/validate-everyone-edit-removed.sh
+    hint: Find the ClusterRoleBinding whose subject is system:authenticated and delete
+      it.
+  - name: release-bot-least-privilege
+    description: release-bot has exactly the rights it needs in orbit
+    type: file
+    source: validation/validate-release-bot-least-privilege.sh
+    hint: Replace the wildcard Role with rules for create, update and patch on deployments
+      (apps) and get and list on pods.
+  - name: developers-secrets-scoped
+    description: developers read Secrets in orbit only
+    type: file
+    source: validation/validate-developers-secrets-scoped.sh
+    hint: Delete the ClusterRoleBinding and create a RoleBinding to the secret-reader
+      ClusterRole in orbit.
+  - name: team-label-required
+    description: Deployments in orbit need a team label
+    type: file
+    source: validation/validate-team-label-required.sh
+    hint: Write a ValidatingAdmissionPolicy for deployments in the apps group with
+      a CEL expression that checks the label, and a binding with Deny for orbit.
+  - name: orbit-pod-security-levels
+    description: orbit enforces baseline and warns about restricted
+    type: file
+    source: validation/validate-orbit-pod-security-levels.sh
+    hint: Label the namespace with pod-security.kubernetes.io/enforce=baseline and
+      pod-security.kubernetes.io/warn=restricted.
+teardown:
+  keepCluster: false

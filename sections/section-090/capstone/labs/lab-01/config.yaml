@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Segment A Two Namespace Application (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-090
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - ghcr.io/stefanprodan/podinfo:6.15.0
+    - mccutchen/go-httpbin:2.25.0
+    - curlimages/curl:8.22.0
+    addons:
+      cni: calico
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: gate-from-crane-only
+    description: only crane reaches gate
+    type: file
+    source: validation/validate-gate-from-crane-only.sh
+    hint: Select app=gate and allow ingress from app=crane on TCP 8080.
+  - name: store-crane-and-auditor
+    description: crane and auditor reach store, stranger does not
+    type: file
+    source: validation/validate-store-crane-and-auditor.sh
+    hint: Use one peer with a namespaceSelector and a podSelector for auditor, and
+      a second peer for crane. Port 9898.
+  - name: bay-default-deny
+    description: a policy in bay isolates every Pod for ingress
+    type: file
+    source: validation/validate-bay-default-deny.sh
+    hint: Create a NetworkPolicy with an empty podSelector and policyTypes Ingress.
+  - name: crane-egress-limited
+    description: crane reaches gate and store by name and nothing else
+    type: file
+    source: validation/validate-crane-egress-limited.sh
+    hint: Write an Egress policy for app=crane with rules for DNS, gate on 8080 and
+      store on 9898.
+  - name: quay-untouched
+    description: auditor and stranger still reach lighthouse
+    type: file
+    source: validation/validate-quay-untouched.sh
+    hint: This is a guard. Do not add policies in quay that block lighthouse.
+teardown:
+  keepCluster: false

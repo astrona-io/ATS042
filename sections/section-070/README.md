@@ -3,15 +3,21 @@ draft: true
 exam_objectives:
   - Pod
 ---
-# Pod
+# Pod Execution And Credential Boundaries
 
-This section teaches pod execution and credential boundaries. These ideas help you explain system behavior and choose a suitable approach in a KCSA scenario.
+A pod is the unit that runs application code, and it carries both the execution settings of its containers and a credential for the Kubernetes API. Both decide what a compromised process can do next.
 
-You will work through Pod Execution And Credential Boundaries. Each module introduces its goals, teaches the concepts through examples, and closes with a summary. Reusable YAML checkpoints review related objectives after selected section summaries. The course assessment index records their placement and coverage.
+## Learning outcomes
 
-## Learning Outcomes
+- List what containers in one pod share and what stays separate.
+- Name the pod settings that remove container isolation.
+- Apply Pod Security Standards with namespace labels and explain what the labels do not cover.
+- Describe how a service account token is created, bound and refreshed.
+- Remove the API token from a workload that does not need it.
+- Explain why Secret read rights and Pod creation rights are credential rights.
+- Explain the permissions behind exec, attach, port forwarding and ephemeral containers.
+- List what recovery must replace after a pod is compromised.
 
-- Explain shared resources and trust within a multi-container Pod.
-- Identify unnecessary host access and API credential exposure.
-- Relate security context and admission to Pod execution.
-- Describe replacement without assuming restored trust.
+## What is in this section
+
+The section has one module, Pod Execution And Credential Boundaries. It has 3 reading parts, a summary and a playground: a cluster to test Pod Security Admission labels, inspect service account tokens and review a role that allows exec and Secret reads. A graded lab follows the reading part it practises. A capstone lab closes the section with a new scenario, and a knowledge check of ten questions follows the capstone.

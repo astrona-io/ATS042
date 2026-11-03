@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Reduce Who Can Reach A Volume (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-110-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: inspector-unmounted
+    description: inspector does not mount the claim
+    type: file
+    source: validation/validate-inspector-unmounted.sh
+    hint: Remove the volume and the volume mount from the Deployment inspector.
+  - name: reporter-read-only
+    description: reporter mounts records read-only
+    type: file
+    source: validation/validate-reporter-read-only.sh
+    hint: 'Set readOnly: true on the volume mount of reporter. It must keep the claim.'
+  - name: records-retained
+    description: the volume behind records is retained
+    type: file
+    source: validation/validate-records-retained.sh
+    hint: Patch spec.persistentVolumeReclaimPolicy of the PersistentVolume to Retain.
+  - name: clerk-no-workloads
+    description: clerk reads claims and starts nothing
+    type: file
+    source: validation/validate-clerk-no-workloads.sh
+    hint: Replace the Role rules with get and list on persistentvolumeclaims only.
+  - name: collector-intact
+    description: collector still writes to a bound claim
+    type: file
+    source: validation/validate-collector-intact.sh
+    hint: This is a guard. Do not change collector or delete the claim.
+teardown:
+  keepCluster: false

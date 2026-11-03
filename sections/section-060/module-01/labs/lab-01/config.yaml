@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Close Service Exposure And Endpoint Write Rights (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-060-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - mccutchen/go-httpbin:2.25.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: gateway-clusterip
+    description: gateway is a ClusterIP Service with no externalIPs and a ready endpoint
+    type: file
+    source: validation/validate-gateway-clusterip.sh
+    hint: Set the type to ClusterIP, remove externalIPs and the nodePort, and keep
+      the selector app=probe on port 80.
+  - name: externalips-rejected
+    description: a Service with externalIPs is rejected in starfleet and a ClusterIP
+      Service is accepted
+    type: file
+    source: validation/validate-externalips-rejected.sh
+    hint: Create a ValidatingAdmissionPolicy and a binding for the namespace starfleet
+      that denies spec.externalIPs.
+  - name: intern-no-traffic-writes
+    description: intern cannot write Services, Endpoints or EndpointSlices but can
+      read Services
+    type: file
+    source: validation/validate-intern-no-traffic-writes.sh
+    hint: Reduce the ClusterRole traffic-editor to get, list and watch.
+  - name: proxy-metrics-local
+    description: kube-proxy metricsBindAddress is the loopback address and the file
+      is otherwise kept
+    type: file
+    source: validation/validate-proxy-metrics-local.sh
+    hint: Edit the ConfigMap kube-proxy in kube-system and set metricsBindAddress
+      to 127.0.0.1:10249 in config.conf.
+teardown:
+  keepCluster: false

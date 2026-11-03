@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: archive-key-reader
+  namespace: vault
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["archive-key"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backup-ops-archive-key
+  namespace: vault
+subjects:
+  - kind: ServiceAccount
+    name: backup-ops
+    namespace: vault
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: archive-key-reader

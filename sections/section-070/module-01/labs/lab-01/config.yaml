@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Harden A Workload And Its Credentials (LAB). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-lab-070-01
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: relay-hardened
+    description: relay drops privileges and host access and has a ready replica
+    type: file
+    source: validation/validate-relay-hardened.sh
+    hint: Remove privileged, hostNetwork and the hostPath volume. Set runAsNonRoot,
+      the RuntimeDefault seccomp profile, allowPrivilegeEscalation false and drop
+      ALL.
+  - name: relay-no-token
+    description: relay mounts no API token
+    type: file
+    source: validation/validate-relay-no-token.sh
+    hint: Set automountServiceAccountToken to false on the service account and in
+      the pod template, then wait for the new pod.
+  - name: relay-role-reduced
+    description: relay reads ConfigMaps but not Secrets and cannot exec
+    type: file
+    source: validation/validate-relay-role-reduced.sh
+    hint: Keep get and list on configmaps. Remove secrets and pods/exec from the Role
+      relay-role.
+  - name: hangar-restricted
+    description: hangar enforces the restricted standard and rejects a privileged
+      pod
+    type: file
+    source: validation/validate-hangar-restricted.sh
+    hint: Label the namespace with pod-security.kubernetes.io/enforce=restricted.
+teardown:
+  keepCluster: false

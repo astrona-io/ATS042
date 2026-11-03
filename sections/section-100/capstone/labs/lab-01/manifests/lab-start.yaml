@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: deck
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: loader
+  namespace: deck
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: loader-token
+  namespace: deck
+  annotations:
+    kubernetes.io/service-account.name: loader
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: loader-admin
+subjects:
+  - kind: ServiceAccount
+    name: loader
+    namespace: deck
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hold
+  namespace: deck
+  labels:
+    app: hold
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hold
+  template:
+    metadata:
+      labels:
+        app: hold
+    spec:
+      serviceAccountName: hold
+      containers:
+        - name: hold
+          image: ghcr.io/stefanprodan/podinfo:6.15.0
+          ports:
+            - name: http
+              containerPort: 9898
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hold
+  namespace: deck
+spec:
+  selector:
+    app: hold
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ci-kubeconfig
+  namespace: deck
+data:
+  config: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: deck
+        cluster:
+          server: https://203.0.113.10:6443
+          insecure-skip-tls-verify: true
+    users:
+      - name: runner
+        user:
+          exec:
+            apiVersion: client.authentication.k8s.io/v1
+            command: /bin/sh
+            args: ["-c", "cat /tmp/fetch-token"]
+            interactiveMode: Never
+    contexts:
+      - name: deck
+        context:
+          cluster: deck
+          user: runner
+    current-context: deck
+---
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: pilot
+spec:
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ1pqQ0NBVTRDQVFBd0lURU9NQXdHQTFVRUF3d0ZjR2xzYjNReER6QU5CZ05WQkFvTUJtWnNhV2RvZERDQwpBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0NnZ0VCQU14TVJ4NGtlVHNadWVkZWV2WjJKZjBZClkxUnJBbUsraHlBRjZUcVlkT01BeG1TUTRMNW8zWDgzaGlSUmRDYmFTR1Q0UkNEQ0hydnF6bkJpYUZMUWQrUmcKWDdhQzh3c1F0ejVqVmhwTWZ6ZGRMd05jeHB0R1k4ZnoyMlo3bS9SRFIxZDFXWUx2dDN5S3h1THB3cWlxZU9mRwpQUURnUmY3SUcxa0k1alZIZWpqeVc4eC9jV2VYYVZESkZTY0dZajJkUlBYYTY4YXNCYWUrVmRvSXlYb3pQenN3Cjh4YUtzS2NlZkQ5a3BGL0phdmtlOVpWRVY5aUdsaFU4SmJNTXh4R0FkbW1xbVdscmpjZlBvTEZyVFhvZDd6eDMKUzJVZUdNLy9PZEhYVkRUeWUxNVh2L0gzRkxHOFRpZWtiTmRSRVFsRmhUTWhHVVlsRVY3RnNJWXVmM1VSVWVrQwpBd0VBQWFBQU1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQXUxTmFaNytPMEhxNWc5SFJNNDBNVE9hN0duZGlFClVxdnFIR1g4b1NGOHR5YUdla1A2VUFacE13cUszU21xYnVJaGVwR1ZaYysvMXl1YU5aM1dOaDhtNUV6TXV6dGYKYjNDeWppUmw4UlVrNFB2Q2x0dDhVR3pKMXZEVTBHeXl4aFlCYWc5ekxxNk1scEc5dVlyb0lRVm9rdlkxTjBPZwpGbGMwWklIN1JXMjZTR0Y1NmpWRFVEQTEvdDRNV0l4KzdLTFE5ZUp3WE8vVHc3ZW5OeFJpR0NZRVFtVDJHOU1tCnA4SGdwRTV1K1FJWGlpTFQ2M1JRbWRJa0hMczdZT2wwQmVKOEtMeGJ4Zk9ZQUV1NjN0M01KL2lWbkxaV1ZaMnoKOUM2WlZxSXhUQjVpeldTaW5Mb0o0dWVwcDBRUTRSNE0wdjhwY2tKby8wMVphUm1kTkp2eFRmSXQKLS0tLS1FTkQgQ0VSVElGSUNBVEUgUkVRVUVTVC0tLS0tCg==
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 3600
+  usages:
+    - client auth
+---
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: pilot-root
+spec:
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ2JqQ0NBVllDQVFBd0tURU9NQXdHQTFVRUF3d0ZjR2xzYjNReEZ6QVZCZ05WQkFvTURuTjVjM1JsYlRwdApZWE4wWlhKek1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBTUlJQkNnS0NBUUVBcVBtVGszMTgxSXJyCjh4bkxwSWpuV0ZBc3ZvK3lWL09vbndQL3lLb2E4aWE5Q1hTRzNaQ1hiWkdMbGZZQ1JESUMzclJQNUZOcUV6cVkKM0dnbHhIZllDcVhCcW0xQ1lSbFBZd1lPQU81VmJIZUZDOG1RRi9xV3pRZG9mNkNFUGJKY3NFTURYVzRkc2R6eQphWlNRTnZqSml3dnFNKzBhWlg4bkp2Q2lQLzU1a2JVbjhPYmtUTmU0OU12NmxJQmZzUlhrdmpMVHN5M3JPTnNBClFGNlQ0T2NVcjk3VjRYZkVHQVhCWTlkYTMrVTdlWkF6ZFFlbHNLR0Vqbk44RWdJTjNDbGNnREx2Ly8yR1hxR2MKZ2Q3ZHd2NHRneE5YZE00MkVId0JUY2cxY3dtVnRPbUNlU3hsUE5ndnFVY3E2UDJndXI1OWRpclkzRnZXajdVRApoL1ZPYW1qekFRSURBUUFCb0FBd0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFDejBaYjJJZFBKaE1MR01zOG9IClFWWER1MTNpaXo1RGlBODhOOHZUYjYxUU1FTURXTjg3UStVN3ljWmxmbjVka0NqcjZGTktuU0RUVnZtYWkrR3oKQlArSVBFbTRzLzFrWHJkOFI5NGw2bEUvajBZMlFtV2VtczdnZ0JuU2dqclJGMDVSaE13M0g5akRtZ1RJNXFtZgpFK1RvSldlbzBhckUxMzZ0dnJyeHZMMnBGbFdOd1dLbmZIekhPSDd6WWRGdm9rdXlmbURIQXdKN3EvRTVVZVNCCmIzTWN5Rm5WOWxzUnl6Q2lGMHBXYktVcDF1YmpnVVZnS0hKQ3BjWjhldHNjTDNjYy81bE04YUdVY3FpU2tERWcKWWlGNmJBamFTV25GTnZXeDZzZVpEQlR2S0hxOUQxRzM0R1NqUmdjWVBIYzVTTi9Vek1POTZLNktwNlJ2N0JXQgp4OU09Ci0tLS0tRU5EIENFUlRJRklDQVRFIFJFUVVFU1QtLS0tLQo=
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 3600
+  usages:
+    - client auth

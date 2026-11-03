@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Protect A Backup Namespace (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-080
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - busybox:1.37.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: vault-no-host-paths
+    description: exporter and restore mount no host path and have ready replicas
+    type: file
+    source: validation/validate-vault-no-host-paths.sh
+    hint: Remove the hostPath volumes and their mounts from both Deployments.
+  - name: backup-ops-one-secret
+    description: backup-ops gets archive-key in vault and nothing else
+    type: file
+    source: validation/validate-backup-ops-one-secret.sh
+    hint: Use a Role and RoleBinding in vault with resourceNames archive-key and the
+      verb get.
+  - name: groups-denied
+    description: authenticated and unauthenticated groups cannot read Secrets in vault
+      or kube-system
+    type: file
+    source: validation/validate-groups-denied.sh
+    hint: Delete the RoleBinding everyone-secrets in vault.
+  - name: access-key-in-secret
+    description: the access key moved to a Secret and exporter reads it from there
+    type: file
+    source: validation/validate-access-key-in-secret.sh
+    hint: Create backup-target-credentials with access-key, remove access-key from
+      the ConfigMap and use secretKeyRef in exporter.
+  - name: archive-key-immutable
+    description: archive-key is immutable and keeps its data
+    type: file
+    source: validation/validate-archive-key-immutable.sh
+    hint: Patch the Secret with immutable set to true. Do not recreate it with different
+      data.
+teardown:
+  keepCluster: false

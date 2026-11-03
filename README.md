@@ -8,23 +8,23 @@ Concept lessons explain each official objective through concrete examples, diagr
 
 | Section | Objective | Modules | Status |
 | --- | --- | --- | --- |
-| 010 | API Server | 1 | Written; review pending |
-| 020 | Controller Manager | 1 | Written; review pending |
-| 030 | Scheduler | 1 | Written; review pending |
-| 040 | Kubelet | 1 | Written; review pending |
-| 050 | Container Runtime | 1 | Written; review pending |
-| 060 | KubeProxy | 1 | Written; review pending |
-| 070 | Pod | 1 | Written; review pending |
-| 080 | Etcd | 1 | Written; review pending |
-| 090 | Container Networking | 1 | Written; review pending |
-| 100 | Client Security | 1 | Written; review pending |
-| 110 | Storage | 1 | Written; review pending |
+| 010 | API Server | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 020 | Controller Manager | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 030 | Scheduler | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 040 | Kubelet | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 050 | Container Runtime | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 060 | KubeProxy | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 070 | Pod | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 080 | Etcd | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 090 | Container Networking | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 100 | Client Security | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
+| 110 | Storage | 1 | Readings, playground, lab, capstone, quiz (labs untested) |
 
 See [the curriculum map](CURRICULUM.md) for module outcomes. The manifest registers readings in teaching order.
 
 ## Authoring Status
 
-First content draft for review. No labs or playgrounds are included. No Kubernetes cluster is needed to read this course. Technical sections and the ATP009 registration remain draft until the maintainer approves publication.
+Each section has one module with a playground, a graded lab, a capstone lab and a knowledge check, and the course ends with a final domain quiz. Labs and playgrounds are UNTESTED: built with static checks only (`astrona validate`, `bash -n`, YAML parsing). Technical pages stay draft until the maintainer approves publication. The earlier YAML question banks stay in `assessments/`.
 
 ## Sources And Contributions
 

@@ -1,0 +1,581 @@
+# Final domain quiz. Two questions per section. Listed in astrona.yaml as the last quiz entry.
+schema_version: 1
+kind: question_bank
+id: ats042-final
+course_id: ATS042
+exam_code: KCSA
+status: draft
+provenance: Original practice material written for this course; not official exam
+  questions.
+scope:
+  type: domain
+  id: ats042
+  title: Kubernetes Cluster Component Security
+questions:
+- id: ats042-final-010-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why TLS verification, narrow network exposure and short-lived
+    credentials are needed together.
+  source_readings:
+  - sections/section-010/module-01/course-01-protecting-the-cluster-api.md
+  prompt: 'An engineer says: "Our API server is only reachable from the corporate
+    network, so RBAC can stay loose." Which statement is the strongest correction?'
+  options:
+  - id: a
+    text: Network limits remove the need for RBAC.
+    explanation: A reachable client still needs its authority limited.
+  - id: b
+    text: Anyone or anything inside the allowed network, including a compromised workload,
+      still gets whatever its identity is allowed to do.
+    explanation: Correct. Network restriction reduces who can try, but permissions
+      decide what an accepted caller can do.
+  - id: c
+    text: RBAC applies only to internet clients.
+    explanation: RBAC applies to all identities.
+  - id: d
+    text: Corporate networks cannot reach the API server.
+    explanation: That is not a correction of the claim.
+  correct_option: b
+  explanation: Network restriction reduces who can try, but permissions decide what
+    an accepted caller can do.
+- id: ats042-final-010-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain mutating and validating admission and write a ValidatingAdmissionPolicy
+    with a binding.
+  source_readings:
+  - sections/section-010/module-01/course-03-admission-control-and-audit-evidence.md
+  prompt: A ValidatingAdmissionPolicy denies pods with `hostPath` volumes. A user
+    who may only `update` existing Deployments changes the pod template to add a `hostPath`
+    volume. What happens?
+  options:
+  - id: a
+    text: The update is rejected by the policy, because Deployments contain pods.
+    explanation: A policy that matches only the pods resource does not evaluate Deployment
+      objects.
+  - id: b
+    text: The update is accepted, but the ReplicaSet controller later fails to create
+      pods because admission rejects them.
+    explanation: 'Correct. Correct reasoning when the policy matches only pods: the
+      Deployment is stored, and the pod creation by the controller is rejected.'
+  - id: c
+    text: The update is rejected by authentication.
+    explanation: Authentication is not involved.
+  - id: d
+    text: The kubelet applies the policy.
+    explanation: Admission policy runs in the API server.
+  correct_option: b
+  explanation: 'Correct reasoning when the policy matches only pods: the Deployment
+    is stored, and the pod creation by the controller is rejected.'
+- id: ats042-final-020-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain the escalate, bind and impersonate verbs and why a controller
+    should not hold them.
+  source_readings:
+  - sections/section-020/module-01/course-02-controller-identities-and-rbac.md
+  prompt: An operator needs to create RoleBindings so that it can give each tenant
+    namespace a standard role. Which design limits the risk?
+  options:
+  - id: a
+    text: Give it the verbs create on rolebindings and bind on clusterroles with resourceNames
+      set to the one standard ClusterRole.
+    explanation: Correct. The bind verb limited to a named role allows only that role
+      to be granted.
+  - id: b
+    text: Give it cluster-admin so that binding always works.
+    explanation: This allows every right.
+  - id: c
+    text: Give it escalate on all roles.
+    explanation: Escalate allows creating roles with more rights than the caller holds.
+  - id: d
+    text: Let tenants create their own bindings.
+    explanation: This removes the central control.
+  correct_option: a
+  explanation: The bind verb limited to a named role allows only that role to be granted.
+- id: ats042-final-020-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Explain the reconcile loop and name the built-in controllers
+    that matter for security.
+  source_readings:
+  - sections/section-020/module-01/course-03-ownership-recovery-and-failure.md
+  prompt: A ReplicaSet pod is deleted by hand and a replacement appears within seconds.
+    A second pod, created directly with `kubectl run`, is deleted and no replacement
+    appears. What explains the difference?
+  options:
+  - id: a
+    text: The second pod has a different image.
+    explanation: The image does not decide this.
+  - id: b
+    text: The first pod has an ownerReference to a ReplicaSet, whose controller recreates
+      missing pods. The second pod has no controller.
+    explanation: Correct. A pod with no owner is not reconciled by any controller.
+  - id: c
+    text: The scheduler only replaces pods in kube-system.
+    explanation: The scheduler does not replace pods.
+  - id: d
+    text: The kubelet restarts only the first pod.
+    explanation: The kubelet does not recreate deleted pod objects.
+  correct_option: b
+  explanation: A pod with no owner is not reconciled by any controller.
+- id: ats042-final-030-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why labels used for security need controlled ownership,
+    and what NodeRestriction does.
+  source_readings:
+  - sections/section-030/module-01/course-02-placement-rules-taints-and-labels.md
+  prompt: A tenant must run only on nodes labelled `pool=tenant-a`, and no other tenant
+    may use them. Which design is complete?
+  options:
+  - id: a
+    text: Label the nodes and use a nodeSelector in the tenant pods.
+    explanation: Others can add the selector or relabel nodes.
+  - id: b
+    text: Taint the nodes, require a nodeSelector and toleration through an admission
+      policy for the tenant namespace, and restrict RBAC on nodes and on pods/binding.
+    explanation: Correct. Each path that could defeat placement is controlled.
+  - id: c
+    text: Use a toleration only.
+    explanation: A toleration does not attract pods.
+  - id: d
+    text: Name the nodes in nodeName.
+    explanation: This bypasses the scheduler and is blocked by policy.
+  correct_option: b
+  explanation: Each path that could defeat placement is controlled.
+- id: ats042-final-030-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: 'Describe the scheduling cycle: filtering, scoring and binding.'
+  source_readings:
+  - sections/section-030/module-01/course-03-binding-priority-and-availability.md
+  prompt: The kube-scheduler stops for ten minutes. What is true?
+  options:
+  - id: a
+    text: Running pods stop.
+    explanation: The kubelet keeps them running.
+  - id: b
+    text: Running pods keep running, and new or replacement pods stay Pending until
+      a scheduler returns.
+    explanation: Correct. Only unassigned pods wait.
+  - id: c
+    text: Services stop forwarding.
+    explanation: Forwarding is separate.
+  - id: d
+    text: The API server stops.
+    explanation: It does not depend on the scheduler.
+  correct_option: b
+  explanation: Only unassigned pods wait.
+- id: ats042-final-040-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why nodes/proxy and pods/exec are powerful rights and
+    scope them.
+  source_readings:
+  - sections/section-040/module-01/course-02-kubelet-api-authentication-and-authorization.md
+  prompt: A user cannot read Secrets through the API server, but holds `create` on
+    `pods/exec` in every namespace. Why is that still a Secret exposure?
+  options:
+  - id: a
+    text: Exec is read-only.
+    explanation: Exec runs commands.
+  - id: b
+    text: The user can run commands in a pod that mounts a Secret and read its value,
+      so the Secret rule does not protect that data.
+    explanation: Correct. Exec reaches data inside containers through the kubelet.
+  - id: c
+    text: Exec deletes Secrets.
+    explanation: It does not.
+  - id: d
+    text: It is not an exposure.
+    explanation: It is.
+  correct_option: b
+  explanation: Exec reaches data inside containers through the kubelet.
+- id: ats042-final-040-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain the Node authorizer, NodeRestriction and node client
+    certificates.
+  source_readings:
+  - sections/section-040/module-01/course-03-node-identity-certificates-and-host-access.md
+  prompt: A node is compromised and its kubelet client certificate is stolen. What
+    limits the damage?
+  options:
+  - id: a
+    text: Nothing limits it.
+    explanation: The Node authorizer and NodeRestriction limit it.
+  - id: b
+    text: The Node authorizer and NodeRestriction limit the identity to the objects
+      of the pods on that node, and the certificate can be revoked by removing the
+      node and rotating trust.
+    explanation: Correct. These controls keep the node identity narrow.
+  - id: c
+    text: The scheduler.
+    explanation: It does not control identity.
+  - id: d
+    text: The network plugin.
+    explanation: It does not control identity.
+  correct_option: b
+  explanation: These controls keep the node identity narrow.
+- id: ats042-final-050-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why the runtime socket gives host authority.
+  source_readings:
+  - sections/section-050/module-01/course-02-protecting-runtime-access-and-execution-privileges.md
+  prompt: A team asks for a pod that mounts the runtime socket so that it can build
+    images. The namespace enforces the baseline standard. What is the outcome and
+    the right response?
+  options:
+  - id: a
+    text: The pod is accepted, because the user is non-root.
+    explanation: The standard blocks hostPath volumes regardless of the user.
+  - id: b
+    text: The pod is rejected, because hostPath volumes are not allowed under baseline.
+      The team should use an image builder that does not need the socket.
+    explanation: Correct. The control works at admission, and the build need is met
+      without host access.
+  - id: c
+    text: The pod is accepted but receives no network.
+    explanation: Admission does not alter networking.
+  - id: d
+    text: The pod starts and RBAC limits the socket calls.
+    explanation: RBAC does not govern socket calls.
+  correct_option: b
+  explanation: The control works at admission, and the build need is met without host
+    access.
+- id: ats042-final-050-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Choose between ordinary containers and a stronger isolation
+    boundary.
+  source_readings:
+  - sections/section-050/module-01/course-03-runtime-classes-and-stronger-isolation.md
+  prompt: A workload runs untrusted customer code. Which design best limits the effect
+    of a kernel escape?
+  options:
+  - id: a
+    text: A non-root user ID only.
+    explanation: It does not stop a kernel flaw.
+  - id: b
+    text: A RuntimeClass that selects a sandboxed runtime on dedicated nodes, with
+      node selection and a restricted standard on the namespace.
+    explanation: Correct. A separate kernel boundary and placement limit the blast
+      radius.
+  - id: c
+    text: More replicas.
+    explanation: Replicas do not add isolation.
+  - id: d
+    text: A larger memory limit.
+    explanation: Limits do not isolate.
+  correct_option: b
+  explanation: A separate kernel boundary and placement limit the blast radius.
+- id: ats042-final-060-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain why externalIPs and write access to EndpointSlices let
+    a user capture traffic.
+  source_readings:
+  - sections/section-060/module-01/course-02-service-exposure-and-endpoint-trust.md
+  prompt: A tenant can create Services in its namespace but nothing else on the network.
+    It creates a Service with `externalIPs` set to the address that other tenants
+    use for a shared database. What is the effect, and which two controls prevent
+    it?
+  options:
+  - id: a
+    text: Nothing happens, because Services only work in their namespace.
+    explanation: The rules are installed on every node.
+  - id: b
+    text: Kube-proxy installs rules on every node, so connections from any pod to
+      that address reach the tenant's pods. An admission policy or plugin that rejects
+      `externalIPs` and limited Service creation rights prevent it.
+    explanation: Correct. The address is unverified, and both controls remove the
+      path.
+  - id: c
+    text: DNS stops working.
+    explanation: DNS is not affected.
+  - id: d
+    text: Only pods in the tenant namespace are affected.
+    explanation: Rules are installed for all pods on all nodes.
+  correct_option: b
+  explanation: The address is unverified, and both controls remove the path.
+- id: ats042-final-060-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Diagnose a Service that does not answer, from selector to node
+    rules.
+  source_readings:
+  - sections/section-060/module-01/course-03-proxy-configuration-health-and-failure.md
+  prompt: After a node upgrade, pods on one node cannot reach a new Service, while
+    pods on other nodes can. The Service selector and EndpointSlice are correct. What
+    is the most likely cause?
+  options:
+  - id: a
+    text: The Service type is wrong.
+    explanation: Other nodes work with the same Service.
+  - id: b
+    text: Kube-proxy on that node is not running or cannot sync, so the new rules
+      are missing there.
+    explanation: Correct. Rules are built per node.
+  - id: c
+    text: The EndpointSlice is empty.
+    explanation: It was stated to be correct.
+  - id: d
+    text: The API server is down.
+    explanation: Other nodes work.
+  correct_option: b
+  explanation: Rules are built per node.
+- id: ats042-final-070-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain the permissions behind exec, attach, port forwarding
+    and ephemeral containers.
+  source_readings:
+  - sections/section-070/module-01/course-03-interactive-access-and-recovery.md
+  prompt: An operator group holds create on pods/exec and patch on pods/ephemeralcontainers
+    in a namespace where all pods pass the restricted standard and mount no tokens.
+    What can the group still reach?
+  options:
+  - id: a
+    text: Nothing, because the pods are restricted.
+    explanation: Restricted limits privileges, not access to the process.
+  - id: b
+    text: The environment variables, mounted Secrets and network position of every
+      container they enter.
+    explanation: Correct. Commands run with the context of the pod.
+  - id: c
+    text: Only the pod logs.
+    explanation: Exec and debug go beyond logs.
+  - id: d
+    text: The node root filesystem.
+    explanation: The restricted settings block host paths.
+  correct_option: b
+  explanation: Commands run with the context of the pod.
+- id: ats042-final-070-q02
+  type: single_choice
+  difficulty: intermediate
+  learning_objective: Remove the API token from a workload that does not need it.
+  source_readings:
+  - sections/section-070/module-01/course-02-service-account-tokens-and-api-credentials.md
+  prompt: A team sets automountServiceAccountToken false on a ServiceAccount, but
+    a pod from before the change still has the token directory. What is the correct
+    explanation and action?
+  options:
+  - id: a
+    text: The setting is ignored.
+    explanation: It applies when pods are created.
+  - id: b
+    text: The volume is added only at pod creation, so the workload must be restarted.
+    explanation: Correct. A rollout restart creates pods without the volume.
+  - id: c
+    text: The API server must restart.
+    explanation: It does not.
+  - id: d
+    text: The Secret must be deleted.
+    explanation: No such Secret is used here.
+  correct_option: b
+  explanation: A rollout restart creates pods without the volume.
+- id: ats042-final-080-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain what encryption at rest protects and what it does not.
+  source_readings:
+  - sections/section-080/module-01/course-02-secrets-and-encryption-at-rest.md
+  prompt: A cluster encrypts Secrets at rest with a key file stored in the same directory
+    as the etcd snapshots. What does the encryption protect against?
+  options:
+  - id: a
+    text: A reader of the snapshots, only if the key file is not also readable by
+      them.
+    explanation: Correct. The key beside the data weakens the boundary.
+  - id: b
+    text: An authorized API reader.
+    explanation: The API decrypts for them.
+  - id: c
+    text: Everyone who has the snapshot and the directory.
+    explanation: They hold the key too.
+  - id: d
+    text: A root user on the node.
+    explanation: They can read the key.
+  correct_option: a
+  explanation: The key beside the data weakens the boundary.
+- id: ats042-final-080-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Describe what a snapshot contains and what a restore does not
+    bring back.
+  source_readings:
+  - sections/section-080/module-01/course-03-snapshots-quorum-and-recovery.md
+  prompt: After a restore from a two-day-old snapshot, some Pods that ran before the
+    restore disappear and persistent volume data is unchanged. Why?
+  options:
+  - id: a
+    text: The restore deletes volumes.
+    explanation: It does not touch them.
+  - id: b
+    text: It restores cluster objects as of the snapshot time only, so newer objects
+      are lost and controllers reconcile with the old state, while volume data is
+      outside etcd.
+    explanation: Correct. This matches how restore works.
+  - id: c
+    text: The snapshot was corrupt.
+    explanation: Nothing says so.
+  - id: d
+    text: Quorum was lost.
+    explanation: This is not related.
+  correct_option: b
+  explanation: This matches how restore works.
+- id: ats042-final-090-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Distinguish one peer with two selectors from two peers.
+  source_readings:
+  - sections/section-090/module-01/course-02-allowed-connections-and-enforcement.md
+  prompt: 'A namespace has a default deny ingress policy. A new rule is meant to let
+    the monitoring pods of the namespace metrics scrape port 9100. The author writes
+    two peers under from: one namespaceSelector for metrics and one podSelector for
+    app=monitor. What is the effect?'
+  options:
+  - id: a
+    text: It allows only monitor pods in metrics.
+    explanation: That needs one peer with both selectors.
+  - id: b
+    text: It allows every pod in the metrics namespace and every monitor pod in the
+      policy namespace, which is wider than intended.
+    explanation: Correct. Separate peers are alternatives.
+  - id: c
+    text: It allows nothing.
+    explanation: It allows more than intended.
+  - id: d
+    text: It is rejected by the API server.
+    explanation: It is valid.
+  correct_option: b
+  explanation: Separate peers are alternatives.
+- id: ats042-final-090-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: List traffic that NetworkPolicy does not control.
+  source_readings:
+  - sections/section-090/module-01/course-03-egress-dns-and-traffic-outside-policy.md
+  prompt: A team claims that NetworkPolicy protects a payment API because only the
+    checkout pod may connect. Which weakness remains?
+  options:
+  - id: a
+    text: None, because the source is authenticated.
+    explanation: An address is not an identity.
+  - id: b
+    text: Anything running inside the checkout pod can call every path on the API,
+      and the traffic is not encrypted.
+    explanation: Correct. Policy does not see content or identity.
+  - id: c
+    text: The policy slows traffic.
+    explanation: It is not the issue.
+  - id: d
+    text: DNS is open.
+    explanation: This is unrelated.
+  correct_option: b
+  explanation: Policy does not see content or identity.
+- id: ats042-final-100-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Name the permissions that control certificate approval and token
+    creation.
+  source_readings:
+  - sections/section-100/module-01/course-03-service-account-tokens-and-automation-credentials.md
+  prompt: A platform team lets all developers run kubectl create token for any service
+    account in their own namespace, and one namespace contains an account bound to
+    cluster-admin. Why is this a privilege escalation path?
+  options:
+  - id: a
+    text: Tokens cannot be used outside the cluster.
+    explanation: They can.
+  - id: b
+    text: The right to create a token for an account gives the permissions of that
+      account, so a developer can act as the administrator account.
+    explanation: Correct. The token carries the identity of the account.
+  - id: c
+    text: The token gives access only to pods.
+    explanation: It carries every permission of the account.
+  - id: d
+    text: The token expires immediately.
+    explanation: It lasts for the requested duration.
+  correct_option: b
+  explanation: The token carries the identity of the account.
+- id: ats042-final-100-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain how a certificate subject maps to a user and groups.
+  source_readings:
+  - sections/section-100/module-01/course-02-client-certificates-and-signing-requests.md
+  prompt: An automated approver signs every certificate request in the signer kubernetes.io/kube-apiserver-client
+    when the requestor is a member of the group developers. A developer submits a
+    request with O=system:masters. What is the best fix?
+  options:
+  - id: a
+    text: Trust that developers will not do this.
+    explanation: The approver acts on any subject.
+  - id: b
+    text: Have the approver check the subject and requested groups against an allowed
+      list, and limit who holds approve rights for the signer.
+    explanation: Correct. Approval decides which identity is created.
+  - id: c
+    text: Increase the requested lifetime.
+    explanation: It does not help.
+  - id: d
+    text: Delete the request after signing.
+    explanation: The certificate stays valid.
+  correct_option: b
+  explanation: Approval decides which identity is created.
+- id: ats042-final-110-q01
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Name the rights that give access to mounted data.
+  source_readings:
+  - sections/section-110/module-01/course-01-volumes-claims-and-who-reaches-the-data.md
+  prompt: A team stores customer records in an encrypted volume and says that only
+    the application can read them. A developer in the same namespace has the right
+    to create Jobs. What is the weakness?
+  options:
+  - id: a
+    text: Encryption blocks the Job.
+    explanation: The file system decrypts data for a mount.
+  - id: b
+    text: The Job can mount the claim, and the mount shows decrypted data to its process.
+    explanation: Correct. The right to create Jobs is a right on every claim in the
+      namespace.
+  - id: c
+    text: Jobs cannot use claims.
+    explanation: They can.
+  - id: d
+    text: Jobs are not subject to namespaces.
+    explanation: They are.
+  correct_option: b
+  explanation: The right to create Jobs is a right on every claim in the namespace.
+- id: ats042-final-110-q02
+  type: single_choice
+  difficulty: advanced
+  learning_objective: Explain what snapshots, backups and encryption at rest protect
+    and what deletion leaves behind.
+  source_readings:
+  - sections/section-110/module-01/course-03-host-paths-backups-and-data-lifecycle.md
+  prompt: A cluster allows teams to create claims from snapshots. A team without access
+    to a database claim restores last night snapshot into a claim of its own namespace.
+    Which control closes this route?
+  options:
+  - id: a
+    text: A read-only mount on the original claim.
+    explanation: The restored claim is a separate volume.
+  - id: b
+    text: Limiting who may create claims with a snapshot data source and who may read
+      the snapshot objects, in the same way as for the original claim.
+    explanation: Correct. The snapshot is another path to the data.
+  - id: c
+    text: The access mode ReadWriteOnce.
+    explanation: It does not control restores.
+  - id: d
+    text: The reclaim policy Retain.
+    explanation: It only controls the volume after the claim is deleted.
+  correct_option: b
+  explanation: The snapshot is another path to the data.

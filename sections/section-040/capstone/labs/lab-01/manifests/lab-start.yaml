@@ -1,0 +1,133 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: deck
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: auditor
+  namespace: deck
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ops
+  namespace: deck
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: inspector
+  namespace: deck
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-auditor
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/*"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: auditor-node-auditor
+subjects:
+  - kind: ServiceAccount
+    name: auditor
+    namespace: deck
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: node-auditor
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ops-access
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec", "pods/attach", "pods/portforward"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ops-access
+subjects:
+  - kind: ServiceAccount
+    name: ops
+    namespace: deck
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ops-access
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: csr-approver
+rules:
+  - apiGroups: ["certificates.k8s.io"]
+    resources: ["certificatesigningrequests"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["certificates.k8s.io"]
+    resources: ["certificatesigningrequests/approval"]
+    verbs: ["update"]
+  - apiGroups: ["certificates.k8s.io"]
+    resources: ["signers"]
+    verbs: ["approve"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: everyone-approves-csr
+subjects:
+  - kind: Group
+    name: system:authenticated
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: csr-approver
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inspector
+  namespace: deck
+  labels:
+    app: inspector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inspector
+  template:
+    metadata:
+      labels:
+        app: inspector
+    spec:
+      serviceAccountName: inspector
+      containers:
+        - name: inspector
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          volumeMounts:
+            - name: kubelet-dir
+              mountPath: /host-kubelet
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 8Mi
+      volumes:
+        - name: kubelet-dir
+          hostPath:
+            path: /var/lib/kubelet
+            type: Directory

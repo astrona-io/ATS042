@@ -5,41 +5,92 @@ exam_objectives:
 ---
 # Pod Networks And Policy Boundaries
 
-The `shuttle` Pod sends a request to the `probe` Pod on another node. Kubernetes gives Pods network identities so applications can communicate without needing to know which node hosts each process. Containers inside a normal Pod share its network namespace and can communicate through the local loopback address.
+The `shuttle` Pod sends a request to the `probe` Pod, possibly on another node. Kubernetes gives each Pod its own network identity so that applications talk to each other without knowing which node hosts the other process. This part explains the network model, what a Container Network Interface plugin contributes, what a default cluster allows, and why that default is a security decision rather than a neutral starting point.
 
-The Kubernetes network model expects Pod-to-Pod communication across nodes without an application needing to translate its Pod address. The network implementation makes that model work through routing, encapsulation or other mechanisms. The details depend on the plugin, infrastructure and configured policy.
+## The Network Model
 
-The Container Network Interface (CNI) defines an interface used to configure container networking. A CNI plugin helps connect Pod network namespaces and allocate addresses. A network implementation may also enforce policy or implement Service forwarding, but these capabilities are not guaranteed merely because a plugin supports CNI.
+The Kubernetes network model has three rules. Every Pod gets its own IP address. A Pod can reach every other Pod using that address, across nodes, without address translation. Agents on a node, such as the kubelet, can reach all Pods on that node.
 
-A Pod's address is different from a node address. Replacement can give an application a new Pod address. Applications therefore should not treat one Pod address as a permanent service location. A Service supplies a stable access abstraction for selected backends while individual Pods change.
+The rules describe connectivity, not security. Nothing in the model says that a Pod should be allowed to talk to every other Pod. The default is open: unless a NetworkPolicy isolates a Pod, any Pod in any namespace can connect to any port that the Pod listens on.
+
+Containers in one Pod share a network namespace, so they reach each other on the loopback address. Containers in different Pods use Pod addresses or Service addresses. A Pod address belongs to one Pod instance, and a replacement Pod gets a new one. A Service gives a stable address and name for a changing set of Pods, and its forwarding rules are written by kube-proxy or by the network plugin.
+
+## What The Network Plugin Does
+
+The Container Network Interface (CNI) is a specification for programs that set up the network of a container. When the kubelet starts a Pod, the runtime creates the network namespace and calls the CNI plugin. The plugin creates the virtual network interface in the Pod, assigns an address from the Pod range of the node and sets routes, so that traffic leaves the node toward the right destination.
+
+Between nodes, the plugin either routes Pod address ranges through the underlying network or encapsulates Pod packets inside other packets. Encapsulation wraps the original packet so that the underlying network only sees traffic between node addresses.
+
+A plugin may also enforce NetworkPolicy. This is a separate feature that not every plugin has. The API server accepts a NetworkPolicy object whatever plugin is installed. A cluster whose plugin does not enforce policy stores the object and applies nothing, and the Pods stay open without any error message.
 
 ```mermaid
 flowchart TB
-    A["Pod on node A"] -->|"network implementation"| N["Cluster Pod network"]
-    N -->|"routes traffic"| B["Pod on node B"]
-    C["Network plugin"] -->|"configures connectivity"| N
+  S["shuttle Pod"] -->|"Pod IP or Service IP"| P["Network plugin on the node"]
+  P -->|"routes or encapsulates"| N["Cluster Pod network"]
+  N --> D["Network plugin on the destination node"]
+  D --> T["probe Pod"]
+  X["NetworkPolicy rules"] -.->|"enforced by the plugin, if supported"| P
 ```
-Cross-node communication depends on the configured network implementation, not on the scheduler forwarding packets.
 
-Connectivity also depends on policy and application listeners. Successful Pod placement does not prove that its port is open or its address is reachable from a particular source. For a communication failure, distinguish addressing, route implementation, traffic policy and the process listening on the destination.
+The diagram shows that the plugin sits on both ends of the path. A policy is enforced there only when the plugin supports it.
 
-## Addressing Across Node Boundaries
+## See The Default
 
-Consider `shuttle` on node A and `probe` on node B. The client process sends a packet using its Pod network namespace. The configured network implementation moves that packet across the required host and infrastructure boundaries, then delivers it to the destination Pod network namespace. The application does not ask the scheduler to relay each packet.
+The playground runs Calico as the network plugin, which enforces NetworkPolicy. No policies exist at the start. Find the Pod addresses and nodes first.
 
-An implementation can route directly between Pod address ranges or encapsulate traffic for transport across the underlying network. Encapsulation wraps the original packet in another packet; routing determines how the destination is reached through the network. The choice affects operational details and overhead, but the application-facing goal remains compatible Pod communication.
+<!-- astrona:playground:renew -->
 
-Infrastructure still matters. Host routing, firewall rules, address allocation and permitted packet sizes can affect whether the plugin's design works. A valid Pod address is not proof that every node path is healthy. A failure limited to cross-node traffic suggests a different boundary from a failure between two containers sharing one Pod.
+```sh
+kubectl get pods -A -o wide
+```
 
-## Pod Networking And Service Networking
+The output shows a Pod IP and a node for every Pod. Now send a real request from `shuttle` to the Service of `probe`. The container image `curl` has the `curl` command, and the options make the output short: `-sS` shows errors, `--max-time 3` limits the wait to three seconds, and `-w` prints the HTTP status code:
 
-A Pod address identifies an instance. A Service address identifies a stable access abstraction that can direct clients to several instances. The forwarding component must translate or otherwise implement that access pattern according to its design. A network plugin may provide both Pod connectivity and Service behavior, but the responsibilities remain conceptually distinct.
+```sh
+kubectl -n starfleet exec deploy/shuttle -- curl -sS --max-time 3 -o /dev/null -w '%{http_code}\n' http://probe.starfleet.svc/get
+```
 
-Replacement can change a Pod address while the Service address stays the same. This helps clients avoid tracking every lifecycle event. Long-lived connections can still point to a failed backend, so applications need appropriate reconnection and safe retries. Stable discovery does not make every established connection immortal.
+Then check the result. The command prints `200`. Repeat the request from `drifter`, which runs in the other namespace:
 
-When explaining a failure, identify whether the client uses an instance address or a Service abstraction, whether the path crosses nodes and which component implements that path. Then consider traffic policy and the listener. These details turn a broad “networking is broken” symptom into a bounded question.
+```sh
+kubectl -n outpost exec deploy/drifter -- curl -sS --max-time 3 -o /dev/null -w '%{http_code}\n' http://probe.starfleet.svc/get
+```
+
+The answer is `200` again. A Pod in `outpost` reaches a Pod in `starfleet` because nothing says otherwise. A namespace is not a network boundary, and the same applies to the `scout` service:
+
+```sh
+kubectl -n outpost exec deploy/drifter -- curl -sS --max-time 3 -o /dev/null -w '%{http_code}\n' http://scout.starfleet.svc/healthz
+```
+
+## Why The Open Default Matters
+
+A compromised Pod that is allowed to reach every other Pod can scan the network, call internal services that expect only trusted callers and reach databases that have no authentication of their own. Many internal services rely on the network for trust, for example admin interfaces that listen on a Pod port and expect that only trusted clients can connect. The default network model offers them no protection.
+
+Three layers fit together here. Network policy limits who can open a connection. Authentication and authorization in the application limit who can do what after the connection is open. Encryption in transit protects the content of the connection. A policy does not replace the other two.
+
+## Addressing Across Nodes
+
+Consider `shuttle` on node A and `probe` on node B. The client process sends a packet from its own network namespace, and the plugin moves it across the host and infrastructure boundaries to the destination namespace. The scheduler does not relay packets, and neither does the API server.
+
+Infrastructure still matters. Host routing, firewall rules, address allocation and packet size limits can break a design that works on paper. A failure that occurs only between nodes points at the plugin or the infrastructure, while a failure between two containers of one Pod points at the application.
+
+## Pods And Services In A Policy
+
+A Service address is virtual. When `shuttle` connects to the Service address of `probe` on port 80, the connection is rewritten to a Pod address on port 8080, the container port. The plugin evaluates policies against the Pod address and the Pod port, after the rewrite. A rule that names the Service port 80 therefore does not match, and a rule that names the container port 8080 does.
+
+## Read A Failing Path Step By Step
+
+When a request fails, name each step of the path and test it separately. This turns a vague network symptom into a short list of questions.
+
+1. Name resolution. Does the Service name resolve to an address? A resolution error from the client points at DNS, and a timeout after a successful resolution does not.
+2. Service forwarding. Does the Service have ready endpoints? An empty endpoint list means no Pod matches the selector or none is ready.
+3. Pod connectivity. Does the connection work with the Pod address and the container port? If it works there and fails through the Service, the problem is in forwarding.
+4. The listener. Does the process listen on the expected port and on a reachable address? A process bound to the loopback address accepts only local callers.
+5. Policy. Does a NetworkPolicy select the source or the destination, and does some rule allow this connection?
+
+Each step excludes a group of causes. A timeout usually means a dropped packet, from a policy or a firewall. A connection refused answer means that the packet arrived and nothing listens on the port.
 
 ## Common pitfalls
 
 > [!WARNING]
-> Supporting CNI does not guarantee NetworkPolicy enforcement. Pod addresses can change, and the scheduler does not implement packet forwarding.
+> Supporting CNI does not guarantee NetworkPolicy enforcement, and a NetworkPolicy object on a plugin that ignores it protects nothing. Namespaces do not isolate traffic, and policy ports are Pod ports, not Service ports.

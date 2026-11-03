@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hangar
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: relay
+  namespace: hangar
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relay
+  namespace: hangar
+  labels:
+    app: relay
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: relay
+  template:
+    metadata:
+      labels:
+        app: relay
+    spec:
+      serviceAccountName: relay
+      hostNetwork: true
+      containers:
+        - name: relay
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: host-etc
+              mountPath: /host-etc
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      volumes:
+        - name: host-etc
+          hostPath:
+            path: /etc
+            type: Directory
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: relay-role
+  namespace: hangar
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: relay-role
+  namespace: hangar
+subjects:
+  - kind: ServiceAccount
+    name: relay
+    namespace: hangar
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: relay-role

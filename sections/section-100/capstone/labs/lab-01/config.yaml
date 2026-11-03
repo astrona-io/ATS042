@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Rotate Access For A Flight Crew (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-100
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - ghcr.io/stefanprodan/podinfo:6.15.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: pilot-csr-decisions
+    description: pilot is approved and signed, pilot-root is denied
+    type: file
+    source: validation/validate-pilot-csr-decisions.sh
+    hint: Approve the request for the group flight and deny the request for system:masters.
+  - name: flight-group-access
+    description: the group flight reads Deployments in deck and nothing else
+    type: file
+    source: validation/validate-flight-group-access.sh
+    hint: Bind a Role with get, list and watch on deployments to the Group flight,
+      not to the user.
+  - name: loader-no-legacy-admin
+    description: loader has no legacy token and no cluster-wide rights
+    type: file
+    source: validation/validate-loader-no-legacy-admin.sh
+    hint: Delete the Secret loader-token and the ClusterRoleBinding loader-admin.
+  - name: loader-patch-only
+    description: loader gets and patches Deployments in deck only
+    type: file
+    source: validation/validate-loader-patch-only.sh
+    hint: Create a Role with get and patch on deployments in deck and bind it to loader.
+  - name: ci-kubeconfig-secret
+    description: the build kubeconfig is a Secret that verifies the server
+    type: file
+    source: validation/validate-ci-kubeconfig-secret.sh
+    hint: Create the Secret ci-kubeconfig with the key config, embed the authority,
+      drop the exec entry, use tokenFile and delete the ConfigMap.
+teardown:
+  keepCluster: false

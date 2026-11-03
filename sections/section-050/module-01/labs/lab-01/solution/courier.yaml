@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: courier
+  namespace: outpost
+  labels:
+    app: courier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: courier
+  template:
+    metadata:
+      labels:
+        app: courier
+    spec:
+      serviceAccountName: courier
+      containers:
+        - name: courier
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

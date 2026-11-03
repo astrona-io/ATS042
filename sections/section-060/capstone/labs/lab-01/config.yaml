@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://cli.astrona.io/schema/lab-config.schema.json
+#
+# Lock Down Services In A Namespace (CAPSTONE). Graded against the live cluster. UNTESTED: static checks only.
+apiVersion: astrona.io/v1
+metadata:
+  name: ats-042-capstone-060
+  docs:
+    prerequisites: prerequisites.md
+    question: question.md
+    solution: solution.md
+runtime:
+  type: kind
+  kind:
+    image: kindest/node:v1.35.8
+    preloadImages:
+    - ghcr.io/stefanprodan/podinfo:6.15.0
+    - mccutchen/go-httpbin:2.25.0
+bootstrap:
+  init:
+  - name: seed-cluster
+    description: Create the workloads and the faulty starting state
+    type: file
+    source: bootstrap/01-seed-cluster.sh
+testing:
+  init:
+  - name: apply-solution
+    description: Apply the reference solution
+    type: file
+    source: solution/apply.sh
+validation:
+  scripts:
+  - name: lane-services-clusterip
+    description: every Service in lane is ClusterIP without externalIPs or node ports
+    type: file
+    source: validation/validate-lane-services-clusterip.sh
+    hint: Patch each Service to type ClusterIP, set externalIPs to null and replace
+      the ports so the node port is dropped.
+  - name: lane-services-have-endpoints
+    description: cargo and beacon each have a ready endpoint
+    type: file
+    source: validation/validate-lane-services-have-endpoints.sh
+    hint: Keep the selectors app=cargo and app=beacon and the target port http when
+      you patch the Services.
+  - name: lane-ops-scoped
+    description: lane-ops manages Services only in lane
+    type: file
+    source: validation/validate-lane-ops-scoped.sh
+    hint: Replace the ClusterRoleBinding with a Role and a RoleBinding in lane.
+  - name: lane-ops-no-endpoint-writes
+    description: lane-ops cannot write Endpoints or EndpointSlices
+    type: file
+    source: validation/validate-lane-ops-no-endpoint-writes.sh
+    hint: Give lane-ops only get, list and watch on endpointslices, and no rule for
+      endpoints.
+  - name: lane-admission-policy
+    description: lane rejects NodePort, LoadBalancer and externalIPs Services and
+      accepts ClusterIP
+    type: file
+    source: validation/validate-lane-admission-policy.sh
+    hint: 'Write a ValidatingAdmissionPolicy and a binding for the namespace lane
+      with two validations: the type and externalIPs.'
+teardown:
+  keepCluster: false

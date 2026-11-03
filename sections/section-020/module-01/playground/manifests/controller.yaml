@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: outpost
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fleet-controller
+  namespace: starfleet
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: intern
+  namespace: starfleet
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fleet-state
+  namespace: starfleet
+data:
+  phase: "idle"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fleet-notes
+  namespace: starfleet
+data:
+  note: "not for the controller"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fleet-key
+  namespace: starfleet
+stringData:
+  key: not-a-real-secret
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fleet-controller
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fleet-controller
+subjects:
+  - kind: ServiceAccount
+    name: fleet-controller
+    namespace: starfleet
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fleet-controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: role-manager
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+    verbs: ["get", "list", "create", "update", "patch", "escalate", "bind"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: intern-role-manager
+subjects:
+  - kind: ServiceAccount
+    name: intern
+    namespace: starfleet
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: role-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleet-controller
+  namespace: starfleet
+  labels:
+    app: fleet-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleet-controller
+  template:
+    metadata:
+      labels:
+        app: fleet-controller
+    spec:
+      serviceAccountName: fleet-controller
+      containers:
+        - name: controller
+          image: busybox:1.37.0
+          command: ["sleep", "3600"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 8Mi

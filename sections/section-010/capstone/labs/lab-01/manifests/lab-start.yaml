@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orbit
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: starfleet
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release-bot
+  namespace: orbit
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orbit-token
+  namespace: orbit
+stringData:
+  value: not-a-real-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: starfleet-token
+  namespace: starfleet
+stringData:
+  value: not-a-real-secret
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: everyone-edit
+subjects:
+  - kind: Group
+    name: system:authenticated
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: edit
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release
+  namespace: orbit
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-bot
+  namespace: orbit
+subjects:
+  - kind: ServiceAccount
+    name: release-bot
+    namespace: orbit
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secret-reader
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: developers-secrets
+subjects:
+  - kind: Group
+    name: developers
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: secret-reader

@@ -1,0 +1,256 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bay
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quay
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gate
+  namespace: bay
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: crane
+  namespace: bay
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: store
+  namespace: bay
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: auditor
+  namespace: quay
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stranger
+  namespace: quay
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lighthouse
+  namespace: quay
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gate
+  namespace: bay
+  labels:
+    app: gate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gate
+  template:
+    metadata:
+      labels:
+        app: gate
+    spec:
+      serviceAccountName: gate
+      containers:
+        - name: gate
+          image: mccutchen/go-httpbin:2.25.0
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gate
+  namespace: bay
+spec:
+  selector:
+    app: gate
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crane
+  namespace: bay
+  labels:
+    app: crane
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crane
+  template:
+    metadata:
+      labels:
+        app: crane
+    spec:
+      serviceAccountName: crane
+      containers:
+        - name: crane
+          image: curlimages/curl:8.22.0
+          command: ["sh", "-c", "while true; do sleep 30; done"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store
+  namespace: bay
+  labels:
+    app: store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: store
+  template:
+    metadata:
+      labels:
+        app: store
+    spec:
+      serviceAccountName: store
+      containers:
+        - name: store
+          image: ghcr.io/stefanprodan/podinfo:6.15.0
+          ports:
+            - name: http
+              containerPort: 9898
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: store
+  namespace: bay
+spec:
+  selector:
+    app: store
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auditor
+  namespace: quay
+  labels:
+    app: auditor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auditor
+  template:
+    metadata:
+      labels:
+        app: auditor
+    spec:
+      serviceAccountName: auditor
+      containers:
+        - name: auditor
+          image: curlimages/curl:8.22.0
+          command: ["sh", "-c", "while true; do sleep 30; done"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stranger
+  namespace: quay
+  labels:
+    app: stranger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stranger
+  template:
+    metadata:
+      labels:
+        app: stranger
+    spec:
+      serviceAccountName: stranger
+      containers:
+        - name: stranger
+          image: curlimages/curl:8.22.0
+          command: ["sh", "-c", "while true; do sleep 30; done"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lighthouse
+  namespace: quay
+  labels:
+    app: lighthouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lighthouse
+  template:
+    metadata:
+      labels:
+        app: lighthouse
+    spec:
+      serviceAccountName: lighthouse
+      containers:
+        - name: lighthouse
+          image: mccutchen/go-httpbin:2.25.0
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lighthouse
+  namespace: quay
+spec:
+  selector:
+    app: lighthouse
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

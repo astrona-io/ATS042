@@ -11,7 +11,7 @@ scope:
   title: 'Checkpoint: Storage'
 placement:
   position: after
-  reading: sections/section-110/module-01/course-02-summary.md
+  reading: sections/section-110/module-01/course-04-summary.md
 questions:
 - id: ats042-section-110-q01
   type: single_choice
@@ -38,7 +38,7 @@ questions:
   difficulty: beginner
   learning_objective: Explain kubeconfig credential and context risks.
   source_readings:
-  - sections/section-100/module-01/course-01-protecting-administrative-and-automated-clients.md
+  - sections/section-100/module-01/course-01-kubeconfig-contexts-and-client-trust.md
   prompt: A client uses a familiar Pod name in the wrong kubeconfig context. What can go wrong?
   options:
   - id: a
@@ -57,7 +57,7 @@ questions:
   difficulty: beginner
   learning_objective: Identify sensitive data in local files and automation logs.
   source_readings:
-  - sections/section-100/module-01/course-01-protecting-administrative-and-automated-clients.md
+  - sections/section-100/module-01/course-01-kubeconfig-contexts-and-client-trust.md
   prompt: A support archive includes a full kubeconfig with credential material. What is the concern?
   options:
   - id: a
@@ -76,7 +76,7 @@ questions:
   difficulty: beginner
   learning_objective: Distinguish API storage resources from backend data permissions.
   source_readings:
-  - sections/section-110/module-01/course-01-storage-permissions-beyond-a-claim.md
+  - sections/section-110/module-01/course-01-volumes-claims-and-who-reaches-the-data.md
   prompt: A PVC is bound and storage is encrypted. What still needs review?
   options:
   - id: a
@@ -95,7 +95,7 @@ questions:
   difficulty: beginner
   learning_objective: Relate encryption, reclaim policy and recovery to data protection.
   source_readings:
-  - sections/section-110/module-01/course-01-storage-permissions-beyond-a-claim.md
+  - sections/section-110/module-01/course-01-volumes-claims-and-who-reaches-the-data.md
   prompt: A replacement Pod mounts data altered during compromise. What has replacement failed to establish?
   options:
   - id: a
