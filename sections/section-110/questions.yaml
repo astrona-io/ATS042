@@ -3,7 +3,7 @@ kind: question_bank
 id: ats042-section-110
 course_id: ATS042
 exam_code: KCSA
-status: draft
+status: alpha
 provenance: Original practice material; not official examination questions.
 scope:
   type: section
