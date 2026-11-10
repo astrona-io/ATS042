@@ -576,7 +576,7 @@ modules:
     path: sections/section-070/module-01/labs/lab-01
     difficulty: intermediate
     estimated_duration: 25m
-    topic: pod security
+    topic: pod-security
     task_kind: build
     tags:
     - pod
@@ -607,7 +607,7 @@ modules:
     path: sections/section-070/capstone/labs/lab-01
     difficulty: advanced
     estimated_duration: 35m
-    topic: pod security
+    topic: pod-security
     task_kind: build
     tags:
     - pod
@@ -744,7 +744,7 @@ modules:
     path: sections/section-090/module-01/labs/lab-01
     difficulty: intermediate
     estimated_duration: 30m
-    topic: network policy
+    topic: network-policy
     task_kind: build
     tags:
     - networkpolicy
@@ -772,7 +772,7 @@ modules:
     path: sections/section-090/capstone/labs/lab-01
     difficulty: advanced
     estimated_duration: 40m
-    topic: network policy
+    topic: network-policy
     task_kind: build
     tags:
     - networkpolicy
@@ -823,7 +823,7 @@ modules:
     path: sections/section-100/module-01/labs/lab-01
     difficulty: intermediate
     estimated_duration: 30m
-    topic: client credentials
+    topic: client-credentials
     task_kind: build
     tags:
     - csr
@@ -854,7 +854,7 @@ modules:
     path: sections/section-100/capstone/labs/lab-01
     difficulty: advanced
     estimated_duration: 40m
-    topic: client credentials
+    topic: client-credentials
     task_kind: build
     tags:
     - csr
